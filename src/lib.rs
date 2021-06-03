@@ -40,6 +40,7 @@ enum ProtocolMessageType {
     },
     Event {
         /// Type of event.
+        #[serde(flatten)]
         event: Event,
     },
 }
@@ -239,6 +240,60 @@ mod tests {
     "supportsHitConditionalBreakpoints": true,
     "supportsDataBreakpoints": true,
     "supportsInstructionBreakpoints": true
+  }
+}"#
+        )
+    }
+
+    #[test]
+    fn test_deserialize_event_exited() {
+        // given:
+        let json = r#"{
+            "seq": 1,
+            "type": "event",
+            "event": "exited",
+            "body": {
+                "exitCode": 0
+            }
+        }"#;
+
+        // when:
+        let actual = serde_json::from_str::<ProtocolMessage>(json).unwrap();
+
+        // then:
+        assert_eq!(
+            actual,
+            ProtocolMessage {
+                seq: 1,
+                type_: ProtocolMessageType::Event {
+                    event: Event::Exited { exit_code: 0 }
+                }
+            }
+        )
+    }
+
+    #[test]
+    fn test_serialize_event_exited() {
+        // given:
+        let under_test = ProtocolMessage {
+            seq: 1,
+            type_: ProtocolMessageType::Event {
+                event: Event::Exited { exit_code: 0 },
+            },
+        };
+
+        // when:
+        let actual = serde_json::to_string_pretty(&under_test).unwrap();
+
+        // then:
+        assert_eq!(
+            actual,
+            r#"{
+  "seq": 1,
+  "type": "event",
+  "event": "exited",
+  "body": {
+    "exitCode": 0
   }
 }"#
         )
