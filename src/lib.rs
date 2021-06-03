@@ -1,13 +1,13 @@
 use core::panic;
 use serde::{
     de::{self, Unexpected},
-    Deserialize, Deserializer, Serialize,
+    Deserialize, Deserializer, Serialize, Serializer,
 };
 use serde_json::{Number, Value};
 
 type SequenceNumber = u64;
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 struct ProtocolMessage {
     /// Sequence number (also known as message ID). For protocol messages of type
     /// 'request' this ID can be used to cancel the request.
@@ -19,13 +19,13 @@ struct ProtocolMessage {
     type_: ProtocolMessageType,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 enum ProtocolMessageType {
     Request {
         /// The command to execute.
         #[serde(flatten)]
-        request: Request,
+        command: RequestCommand,
     },
     Response {
         /// Sequence number of the corresponding request.
@@ -43,7 +43,7 @@ enum ProtocolMessageType {
 /// Object containing arguments for the command.
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "command", content = "arguments")]
-enum Request {
+enum RequestCommand {
     Attach {
         /// Optional data from the previous, restarted session.
         /// The data is sent as the 'restart' attribute of the 'terminated' event.
@@ -127,7 +127,7 @@ impl Default for PathFormat {
 enum ResponseType {
     Success {
         /// The command requested.
-        command: Response,
+        command: ResponseCommand,
     },
     Error {
         /// The command requested.
@@ -152,6 +152,32 @@ struct ErrorResponse {
     // body: Option<Message>,
 }
 
+// Workaround from https://stackoverflow.com/a/65576570
+// for https://github.com/serde-rs/serde/issues/745
+impl<'de> Deserialize<'de> for ResponseType {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let value = Value::deserialize(d)?;
+
+        let success = value
+            .get("success")
+            .ok_or_else(|| de::Error::missing_field("success"))?
+            .as_bool()
+            .ok_or_else(|| de::Error::invalid_type(unexpected_value(&value), &"success bool"))?;
+
+        Ok(if success {
+            let command = ResponseCommand::deserialize(value)
+                .map_err(|e| de::Error::custom(e.to_string()))?;
+            ResponseType::Success { command }
+        } else {
+            let response =
+                ErrorResponse::deserialize(value).map_err(|e| de::Error::custom(e.to_string()))?;
+            ResponseType::Error {
+                command: response.command,
+                message: response.message,
+            }
+        })
+    }
+}
 fn unexpected_value<'l>(value: &'l Value) -> Unexpected<'l> {
     match value {
         Value::Null => Unexpected::Other("null"),
@@ -162,7 +188,6 @@ fn unexpected_value<'l>(value: &'l Value) -> Unexpected<'l> {
         Value::Object(_) => Unexpected::Map,
     }
 }
-
 fn unexpected_number(number: &Number) -> Unexpected<'static> {
     if number.is_f64() {
         return Unexpected::Float(number.as_f64().unwrap());
@@ -175,29 +200,42 @@ fn unexpected_number(number: &Number) -> Unexpected<'static> {
     }
     panic!("Unknown number {}", number)
 }
+impl Serialize for ResponseType {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        #[derive(Serialize)]
+        #[serde(untagged)]
+        enum ResponseTypeContent<'l> {
+            Success {
+                #[serde(flatten)]
+                command: &'l ResponseCommand,
+            },
+            Error {
+                command: &'l String,
+                message: &'l String,
+            },
+        }
 
-impl<'de> Deserialize<'de> for ResponseType {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        let value = Value::deserialize(d)?;
+        #[derive(Serialize)]
+        struct TaggedResponseType<'l> {
+            success: bool,
+            #[serde(flatten)]
+            content: ResponseTypeContent<'l>,
+        }
 
-        let success = value
-            .get("success")
-            .ok_or_else(|| de::Error::missing_field("success"))?
-            .as_bool()
-            .ok_or_else(|| de::Error::invalid_type(unexpected_value(&value), &"success bool"))?;
-
-        Ok(if success {
-            let command =
-                Response::deserialize(value).map_err(|e| de::Error::custom(e.to_string()))?;
-            ResponseType::Success { command }
-        } else {
-            let response =
-                ErrorResponse::deserialize(value).map_err(|e| de::Error::custom(e.to_string()))?;
-            ResponseType::Error {
-                command: response.command,
-                message: response.message,
-            }
-        })
+        let serializable = match self {
+            ResponseType::Success { command } => TaggedResponseType {
+                success: true,
+                content: ResponseTypeContent::Success { command },
+            },
+            ResponseType::Error { command, message } => TaggedResponseType {
+                success: false,
+                content: ResponseTypeContent::Error { command, message },
+            },
+        };
+        serializable.serialize(serializer)
     }
 }
 
@@ -205,11 +243,8 @@ impl<'de> Deserialize<'de> for ResponseType {
 /// success is false.
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "command", content = "body")]
-enum Response {
-    Initialize {
-        #[serde(flatten)]
-        capabilities: Capabilities,
-    },
+enum ResponseCommand {
+    Initialize(Capabilities),
 }
 
 #[derive(Debug, Default, Deserialize, PartialEq, Serialize)]
@@ -424,7 +459,7 @@ mod tests {
             ProtocolMessage {
                 seq: 1,
                 type_: ProtocolMessageType::Request {
-                    request: Request::Initialize {
+                    command: RequestCommand::Initialize {
                         client_id: Some("vscode".to_string()),
                         client_name: Some("Visual Studio Code".to_string()),
                         adapter_id: "mock".to_string(),
@@ -441,6 +476,57 @@ mod tests {
                     },
                 },
             }
+        );
+    }
+
+    #[test]
+    fn test_serialize_request_initialize() {
+        // when:
+        let under_test = ProtocolMessage {
+            seq: 1,
+            type_: ProtocolMessageType::Request {
+                command: RequestCommand::Initialize {
+                    client_id: Some("vscode".to_string()),
+                    client_name: Some("Visual Studio Code".to_string()),
+                    adapter_id: "mock".to_string(),
+                    locale: Some("de".to_string()),
+                    lines_start_at1: true,
+                    columns_start_at1: true,
+                    path_format: PathFormat::Path,
+                    supports_variable_type: true,
+                    supports_variable_paging: true,
+                    supports_run_in_terminal_request: true,
+                    supports_memory_references: false,
+                    supports_progress_reporting: true,
+                    supports_invalidated_event: true,
+                },
+            },
+        };
+
+        let actual = serde_json::to_string_pretty(&under_test).unwrap();
+
+        // then:
+        assert_eq!(
+            actual,
+            r#"{
+  "seq": 1,
+  "type": "request",
+  "command": "initialize",
+  "arguments": {
+    "clientID": "vscode",
+    "clientName": "Visual Studio Code",
+    "adapterID": "mock",
+    "locale": "de",
+    "linesStartAt1": true,
+    "columnsStartAt1": true,
+    "pathFormat": "path",
+    "supportsVariableType": true,
+    "supportsVariablePaging": true,
+    "supportsRunInTerminalRequest": true,
+    "supportsProgressReporting": true,
+    "supportsInvalidatedEvent": true
+  }
+}"#
         );
     }
 
@@ -471,53 +557,60 @@ mod tests {
                 type_: ProtocolMessageType::Response {
                     request_seq: 1,
                     response_type: ResponseType::Success {
-                        command: Response::Initialize {
-                            capabilities: Capabilities {
-                                supports_configuration_done_request: true,
-                                supports_function_breakpoints: true,
-                                supports_conditional_breakpoints: true,
-                                supports_hit_conditional_breakpoints: true,
-                                supports_data_breakpoints: true,
-                                supports_instruction_breakpoints: true,
-                                ..Default::default()
-                            }
-                        }
+                        command: ResponseCommand::Initialize(Capabilities {
+                            supports_configuration_done_request: true,
+                            supports_function_breakpoints: true,
+                            supports_conditional_breakpoints: true,
+                            supports_hit_conditional_breakpoints: true,
+                            supports_data_breakpoints: true,
+                            supports_instruction_breakpoints: true,
+                            ..Default::default()
+                        })
                     },
                 }
             }
         )
     }
 
-    // #[test]
-    // fn test_serialize() {
-    //     // when:
-    //     let request = ProtocolMessage {
-    //         seq: 1,
-    //         type_: ProtocolMessageType::Request {
-    //             request: Request::Initialize {
-    //                 clientID: Some("vscode".to_string()),
-    //                 clientName: Some("Visual Studio Code".to_string()),
-    //                 adapterID: "mock".to_string(),
-    //                 locale: Some("de".to_string()),
-    //                 linesStartAt1: true,
-    //                 columnsStartAt1: true,
-    //                 pathFormat: PathFormat::Path,
-    //                 supportsVariableType: true,
-    //                 supportsVariablePaging: true,
-    //                 supportsRunInTerminalRequest: true,
-    //                 supportsMemoryReferences: false,
-    //                 supportsProgressReporting: true,
-    //                 supportsInvalidatedEvent: true,
-    //             },
-    //         },
-    //     };
+    #[test]
+    fn test_serialize_response_initialize() {
+        let under_test = ProtocolMessage {
+            seq: 1,
+            type_: ProtocolMessageType::Response {
+                request_seq: 1,
+                response_type: ResponseType::Success {
+                    command: ResponseCommand::Initialize(Capabilities {
+                        supports_configuration_done_request: true,
+                        supports_function_breakpoints: true,
+                        supports_conditional_breakpoints: true,
+                        supports_hit_conditional_breakpoints: true,
+                        supports_data_breakpoints: true,
+                        supports_instruction_breakpoints: true,
+                        ..Default::default()
+                    }),
+                },
+            },
+        };
 
-    //     let actual = serde_json::to_string(&request).unwrap();
+        let actual = serde_json::to_string_pretty(&under_test).unwrap();
 
-    //     // then:
-    //     assert_eq!(
-    //         actual,
-    //         r#"{"seq":1,"type":"request","command":"initialize","arguments":{"clientID":"vscode","clientName":"Visual Studio Code","adapterID":"mock","locale":"de","linesStartAt1":true,"columnsStartAt1":true,"pathFormat":"path","supportsVariableType":true,"supportsVariablePaging":true,"supportsRunInTerminalRequest":true,"supportsProgressReporting":true,"supportsInvalidatedEvent":true}}"#
-    //     );
-    // }
+        assert_eq!(
+            actual,
+            r#"{
+  "seq": 1,
+  "type": "response",
+  "request_seq": 1,
+  "success": true,
+  "command": "initialize",
+  "body": {
+    "supportsConfigurationDoneRequest": true,
+    "supportsFunctionBreakpoints": true,
+    "supportsConditionalBreakpoints": true,
+    "supportsHitConditionalBreakpoints": true,
+    "supportsDataBreakpoints": true,
+    "supportsInstructionBreakpoints": true
+  }
+}"#
+        )
+    }
 }
