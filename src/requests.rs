@@ -387,12 +387,16 @@ pub struct DisassembleRequestArguments {
     pub memory_reference: String,
 
     /// Optional offset (in bytes) to be applied to the reference location before disassembling. Can be negative.
-    #[serde(rename = "offset", skip_serializing_if = "Option::is_none")]
-    pub offset: Option<i32>,
+    #[serde(rename = "offset", default, skip_serializing_if = "eq_default")]
+    pub offset: i32,
 
     /// Optional offset (in instructions) to be applied after the byte offset (if any) before disassembling. Can be negative.
-    #[serde(rename = "instructionOffset", skip_serializing_if = "Option::is_none")]
-    pub instruction_offset: Option<i32>,
+    #[serde(
+        rename = "instructionOffset",
+        default,
+        skip_serializing_if = "eq_default"
+    )]
+    pub instruction_offset: i32,
 
     /// Number of instructions to disassemble starting at the specified location and offset.
     ///
@@ -617,12 +621,12 @@ pub struct LoadedSourcesRequestArguments {}
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct ModulesRequestArguments {
     /// The index of the first module to return; if omitted modules start at 0.
-    #[serde(rename = "startModule", skip_serializing_if = "Option::is_none")]
-    pub start_module: Option<i32>,
+    #[serde(rename = "startModule", default, skip_serializing_if = "eq_default")]
+    pub start_module: i32,
 
     /// The number of modules to return. If moduleCount is not specified or 0, all modules are returned.
-    #[serde(rename = "moduleCount", skip_serializing_if = "Option::is_none")]
-    pub module_count: Option<i32>,
+    #[serde(rename = "moduleCount", default, skip_serializing_if = "eq_default")]
+    pub module_count: i32,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
@@ -650,8 +654,8 @@ pub struct ReadMemoryRequestArguments {
     pub memory_reference: String,
 
     /// Optional offset (in bytes) to be applied to the reference location before reading data. Can be negative.
-    #[serde(rename = "offset", skip_serializing_if = "Option::is_none")]
-    pub offset: Option<i32>,
+    #[serde(rename = "offset", default, skip_serializing_if = "eq_default")]
+    pub offset: i32,
 
     /// Number of bytes to read at the specified location and offset.
     #[serde(rename = "count")]
@@ -832,12 +836,12 @@ pub struct StackTraceRequestArguments {
     pub thread_id: i32,
 
     /// The index of the first frame to return; if omitted frames start at 0.
-    #[serde(rename = "startFrame", skip_serializing_if = "Option::is_none")]
-    pub start_frame: Option<i32>,
+    #[serde(rename = "startFrame", default, skip_serializing_if = "eq_default")]
+    pub start_frame: i32,
 
     /// The maximum number of frames to return. If levels is not specified or 0, all frames are returned.
-    #[serde(rename = "levels", skip_serializing_if = "Option::is_none")]
-    pub levels: Option<i32>,
+    #[serde(rename = "levels", default, skip_serializing_if = "eq_default")]
+    pub levels: i32,
 
     /// Specifies details on how to format the stack frames.
     ///
@@ -915,12 +919,12 @@ pub struct VariablesRequestArguments {
     pub filter: Option<VariablesFilter>,
 
     /// The index of the first variable to return; if omitted children start at 0.
-    #[serde(rename = "start", skip_serializing_if = "Option::is_none")]
-    pub start: Option<i32>,
+    #[serde(rename = "start", default, skip_serializing_if = "eq_default")]
+    pub start: i32,
 
     /// The number of variables to return. If count is missing or 0, all variables are returned.
-    #[serde(rename = "count", skip_serializing_if = "Option::is_none")]
-    pub count: Option<i32>,
+    #[serde(rename = "count", default, skip_serializing_if = "eq_default")]
+    pub count: i32,
 
     /// Specifies details on how to format the Variable values.
     ///
