@@ -4,10 +4,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "event", content = "body")]
 pub enum Event {
-    #[serde(rename_all = "camelCase")]
-    Exited {
-        /// The exit code returned from the debuggee.
-        exit_code: i32,
-    },
+    Exited(ExitedEventBody),
     Initialized,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExitedEventBody {
+    /// The exit code returned from the debuggee.
+    pub exit_code: i32,
 }

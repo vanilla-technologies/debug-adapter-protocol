@@ -26,11 +26,13 @@ struct ProtocolMessage {
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 enum ProtocolMessageType {
+    /// A client or debug adapter initiated request.
     Request {
         /// The command to execute.
         #[serde(flatten)]
         command: RequestCommand,
     },
+    /// Response for a request.
     Response {
         /// Sequence number of the corresponding request.
         request_seq: SequenceNumber,
@@ -38,6 +40,7 @@ enum ProtocolMessageType {
         #[serde(flatten)]
         response_type: ResponseType,
     },
+    /// A debug adapter initiated event.
     Event {
         /// Type of event.
         #[serde(flatten)]
@@ -47,7 +50,12 @@ enum ProtocolMessageType {
 
 #[cfg(test)]
 mod tests {
-    use crate::{requests::PathFormat, responses::ResponseCommand, types::Capabilities};
+    use crate::{
+        events::ExitedEventBody,
+        requests::{InitializeRequestArguments, PathFormat},
+        responses::ResponseCommand,
+        types::Capabilities,
+    };
 
     use super::*;
 
@@ -83,7 +91,7 @@ mod tests {
             ProtocolMessage {
                 seq: 1,
                 type_: ProtocolMessageType::Request {
-                    command: RequestCommand::Initialize {
+                    command: RequestCommand::Initialize(InitializeRequestArguments {
                         client_id: Some("vscode".to_string()),
                         client_name: Some("Visual Studio Code".to_string()),
                         adapter_id: "mock".to_string(),
@@ -97,7 +105,7 @@ mod tests {
                         supports_memory_references: false,
                         supports_progress_reporting: true,
                         supports_invalidated_event: true,
-                    },
+                    }),
                 },
             }
         );
@@ -109,7 +117,7 @@ mod tests {
         let under_test = ProtocolMessage {
             seq: 1,
             type_: ProtocolMessageType::Request {
-                command: RequestCommand::Initialize {
+                command: RequestCommand::Initialize(InitializeRequestArguments {
                     client_id: Some("vscode".to_string()),
                     client_name: Some("Visual Studio Code".to_string()),
                     adapter_id: "mock".to_string(),
@@ -123,7 +131,7 @@ mod tests {
                     supports_memory_references: false,
                     supports_progress_reporting: true,
                     supports_invalidated_event: true,
-                },
+                }),
             },
         };
 
@@ -266,7 +274,7 @@ mod tests {
             ProtocolMessage {
                 seq: 1,
                 type_: ProtocolMessageType::Event {
-                    event: Event::Exited { exit_code: 0 }
+                    event: Event::Exited(ExitedEventBody { exit_code: 0 })
                 }
             }
         )
@@ -278,7 +286,7 @@ mod tests {
         let under_test = ProtocolMessage {
             seq: 1,
             type_: ProtocolMessageType::Event {
-                event: Event::Exited { exit_code: 0 },
+                event: Event::Exited(ExitedEventBody { exit_code: 0 }),
             },
         };
 
