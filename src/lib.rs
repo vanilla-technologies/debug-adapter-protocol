@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 
 type SequenceNumber = u64;
 
+/// Base class of requests, responses, and events.
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct ProtocolMessage {
     /// Sequence number (also known as message ID). For protocol messages of type
@@ -19,11 +20,11 @@ pub struct ProtocolMessage {
     seq: SequenceNumber,
 
     /// Message type.
-    /// Values: 'request', 'response', 'event', etc.
     #[serde(flatten)]
     type_: ProtocolMessageType,
 }
 
+/// Message type.
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum ProtocolMessageType {
