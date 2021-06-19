@@ -17,11 +17,11 @@ type SequenceNumber = u64;
 pub struct ProtocolMessage {
     /// Sequence number (also known as message ID). For protocol messages of type
     /// 'request' this ID can be used to cancel the request.
-    seq: SequenceNumber,
+    pub seq: SequenceNumber,
 
     /// Message type.
     #[serde(flatten)]
-    type_: ProtocolMessageType,
+    pub type_: ProtocolMessageType,
 }
 
 /// Message type.
