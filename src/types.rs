@@ -1295,6 +1295,12 @@ pub enum SteppingGranularity {
     Instruction,
 }
 
+impl Default for SteppingGranularity {
+    fn default() -> Self {
+        SteppingGranularity::Statement
+    }
+}
+
 /// A Thread
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Thread {

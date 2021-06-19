@@ -542,7 +542,7 @@ pub struct InitializeRequestArguments {
     pub columns_start_at_1: bool,
 
     /// Determines in what format paths are specified. The default is 'path', which is the native format.
-    #[serde(rename = "pathFormat", default)]
+    #[serde(rename = "pathFormat", default, skip_serializing_if = "eq_default")]
     pub path_format: PathFormat,
 
     /// Client supports the optional type attribute for variables.
@@ -643,8 +643,8 @@ pub struct NextRequestArguments {
     pub thread_id: i32,
 
     /// Optional granularity to step. If no granularity is specified, a granularity of 'statement' is assumed.
-    #[serde(rename = "granularity", skip_serializing_if = "Option::is_none")]
-    pub granularity: Option<SteppingGranularity>,
+    #[serde(rename = "granularity", default, skip_serializing_if = "eq_default")]
+    pub granularity: SteppingGranularity,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
@@ -709,8 +709,8 @@ pub struct RunInTerminalRequestArguments {
     pub args: Vec<String>,
 
     /// Environment key-value pairs that are added to or removed from the default environment.
-    #[serde(rename = "env", skip_serializing_if = "Option::is_none")]
-    pub env: Option<HashMap<String, String>>,
+    #[serde(rename = "env", default, skip_serializing_if = "eq_default")]
+    pub env: HashMap<String, Option<String>>,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
@@ -735,12 +735,12 @@ pub struct SetBreakpointsRequestArguments {
     pub source: Source,
 
     /// The code locations of the breakpoints.
-    #[serde(rename = "breakpoints", skip_serializing_if = "Option::is_none")]
-    pub breakpoints: Option<Vec<SourceBreakpoint>>,
+    #[serde(rename = "breakpoints", default, skip_serializing_if = "eq_default")]
+    pub breakpoints: Vec<SourceBreakpoint>,
 
     /// Deprecated: The code locations of the breakpoints.
-    #[serde(rename = "lines", skip_serializing_if = "Option::is_none")]
-    pub lines: Option<Vec<i32>>,
+    #[serde(rename = "lines", default, skip_serializing_if = "eq_default")]
+    pub lines: Vec<i32>,
 
     /// A value of true indicates that the underlying source has been modified which results in new breakpoint locations.
     #[serde(rename = "sourceModified", default, skip_serializing_if = "eq_default")]
@@ -761,14 +761,18 @@ pub struct SetExceptionBreakpointsRequestArguments {
     pub filters: Vec<String>,
 
     /// Set of exception filters and their options. The set of all possible exception filters is defined by the 'exceptionBreakpointFilters' capability. This attribute is only honored by a debug adapter if the capability 'supportsExceptionFilterOptions' is true. The 'filter' and 'filterOptions' sets are additive.
-    #[serde(rename = "filterOptions", skip_serializing_if = "Option::is_none")]
-    pub filter_options: Option<Vec<ExceptionFilterOptions>>,
+    #[serde(rename = "filterOptions", default, skip_serializing_if = "eq_default")]
+    pub filter_options: Vec<ExceptionFilterOptions>,
 
     /// Configuration options for selected exceptions.
     ///
     /// The attribute is only honored by a debug adapter if the capability 'supportsExceptionOptions' is true.
-    #[serde(rename = "exceptionOptions", skip_serializing_if = "Option::is_none")]
-    pub exception_options: Option<Vec<ExceptionOptions>>,
+    #[serde(
+        rename = "exceptionOptions",
+        default,
+        skip_serializing_if = "eq_default"
+    )]
+    pub exception_options: Vec<ExceptionOptions>,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
@@ -864,8 +868,8 @@ pub struct StepBackRequestArguments {
     pub thread_id: i32,
 
     /// Optional granularity to step. If no granularity is specified, a granularity of 'statement' is assumed.
-    #[serde(rename = "granularity", skip_serializing_if = "Option::is_none")]
-    pub granularity: Option<SteppingGranularity>,
+    #[serde(rename = "granularity", default, skip_serializing_if = "eq_default")]
+    pub granularity: SteppingGranularity,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
@@ -879,8 +883,8 @@ pub struct StepInRequestArguments {
     pub target_id: Option<i32>,
 
     /// Optional granularity to step. If no granularity is specified, a granularity of 'statement' is assumed.
-    #[serde(rename = "granularity", skip_serializing_if = "Option::is_none")]
-    pub granularity: Option<SteppingGranularity>,
+    #[serde(rename = "granularity", default, skip_serializing_if = "eq_default")]
+    pub granularity: SteppingGranularity,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
@@ -897,8 +901,8 @@ pub struct StepOutRequestArguments {
     pub thread_id: i32,
 
     /// Optional granularity to step. If no granularity is specified, a granularity of 'statement' is assumed.
-    #[serde(rename = "granularity", skip_serializing_if = "Option::is_none")]
-    pub granularity: Option<SteppingGranularity>,
+    #[serde(rename = "granularity", default, skip_serializing_if = "eq_default")]
+    pub granularity: SteppingGranularity,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
@@ -911,8 +915,8 @@ pub struct TerminateRequestArguments {
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct TerminateThreadsRequestArguments {
     /// Ids of threads to be terminated.
-    #[serde(rename = "threadIds", skip_serializing_if = "Option::is_none")]
-    pub thread_ids: Option<Vec<i32>>,
+    #[serde(rename = "threadIds", default, skip_serializing_if = "eq_default")]
+    pub thread_ids: Vec<i32>,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
