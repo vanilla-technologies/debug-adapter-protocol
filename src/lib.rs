@@ -1,7 +1,8 @@
-mod events;
-mod requests;
-mod responses;
-mod types;
+pub mod events;
+pub mod requests;
+pub mod responses;
+pub mod types;
+
 mod utils;
 
 use events::Event;
@@ -12,7 +13,7 @@ use serde::{Deserialize, Serialize};
 type SequenceNumber = u64;
 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
-struct ProtocolMessage {
+pub struct ProtocolMessage {
     /// Sequence number (also known as message ID). For protocol messages of type
     /// 'request' this ID can be used to cancel the request.
     seq: SequenceNumber,
@@ -25,7 +26,7 @@ struct ProtocolMessage {
 
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
-enum ProtocolMessageType {
+pub enum ProtocolMessageType {
     /// A client or debug adapter initiated request.
     Request {
         /// The command to execute.
