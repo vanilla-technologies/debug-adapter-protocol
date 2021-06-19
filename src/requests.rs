@@ -709,7 +709,7 @@ pub struct RunInTerminalRequestArguments {
     pub args: Vec<String>,
 
     /// Environment key-value pairs that are added to or removed from the default environment.
-    #[serde(rename = "env", default, skip_serializing_if = "eq_default")]
+    #[serde(rename = "env", default, skip_serializing_if = "HashMap::is_empty")]
     pub env: HashMap<String, Option<String>>,
 }
 
@@ -735,11 +735,11 @@ pub struct SetBreakpointsRequestArguments {
     pub source: Source,
 
     /// The code locations of the breakpoints.
-    #[serde(rename = "breakpoints", default, skip_serializing_if = "eq_default")]
+    #[serde(rename = "breakpoints", default, skip_serializing_if = "Vec::is_empty")]
     pub breakpoints: Vec<SourceBreakpoint>,
 
     /// Deprecated: The code locations of the breakpoints.
-    #[serde(rename = "lines", default, skip_serializing_if = "eq_default")]
+    #[serde(rename = "lines", default, skip_serializing_if = "Vec::is_empty")]
     pub lines: Vec<i32>,
 
     /// A value of true indicates that the underlying source has been modified which results in new breakpoint locations.
@@ -761,7 +761,11 @@ pub struct SetExceptionBreakpointsRequestArguments {
     pub filters: Vec<String>,
 
     /// Set of exception filters and their options. The set of all possible exception filters is defined by the 'exceptionBreakpointFilters' capability. This attribute is only honored by a debug adapter if the capability 'supportsExceptionFilterOptions' is true. The 'filter' and 'filterOptions' sets are additive.
-    #[serde(rename = "filterOptions", default, skip_serializing_if = "eq_default")]
+    #[serde(
+        rename = "filterOptions",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub filter_options: Vec<ExceptionFilterOptions>,
 
     /// Configuration options for selected exceptions.
@@ -770,7 +774,7 @@ pub struct SetExceptionBreakpointsRequestArguments {
     #[serde(
         rename = "exceptionOptions",
         default,
-        skip_serializing_if = "eq_default"
+        skip_serializing_if = "Vec::is_empty"
     )]
     pub exception_options: Vec<ExceptionOptions>,
 }
@@ -915,7 +919,7 @@ pub struct TerminateRequestArguments {
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct TerminateThreadsRequestArguments {
     /// Ids of threads to be terminated.
-    #[serde(rename = "threadIds", default, skip_serializing_if = "eq_default")]
+    #[serde(rename = "threadIds", default, skip_serializing_if = "Vec::is_empty")]
     pub thread_ids: Vec<i32>,
 }
 

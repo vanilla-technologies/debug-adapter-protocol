@@ -158,7 +158,7 @@ pub struct ExitedEventBody {
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct InvalidatedEventBody {
     /// Optional set of logical areas that got invalidated. This property has a hint characteristic: a client can only be expected to make a 'best effort' in honouring the areas but there are no guarantees. If this property is missing, empty, or if values are not understand the client should assume a single value 'all'.
-    #[serde(rename = "areas", default, skip_serializing_if = "eq_default")]
+    #[serde(rename = "areas", default, skip_serializing_if = "Vec::is_empty")]
     pub areas: Vec<InvalidatedAreas>,
 
     /// If specified, the client only needs to refetch data related to this thread.
@@ -449,7 +449,7 @@ pub struct StoppedEventBody {
     #[serde(
         rename = "hitBreakpointIds",
         default,
-        skip_serializing_if = "eq_default"
+        skip_serializing_if = "Vec::is_empty"
     )]
     pub hit_breakpoint_ids: Vec<i32>,
 }

@@ -123,7 +123,7 @@ pub struct Capabilities {
     #[serde(
         rename = "exceptionBreakpointFilters",
         default,
-        skip_serializing_if = "eq_default"
+        skip_serializing_if = "Vec::is_empty"
     )]
     pub exception_breakpoint_filters: Vec<ExceptionBreakpointsFilter>,
 
@@ -194,7 +194,7 @@ pub struct Capabilities {
     #[serde(
         rename = "additionalModuleColumns",
         default,
-        skip_serializing_if = "eq_default"
+        skip_serializing_if = "Vec::is_empty"
     )]
     pub additional_module_columns: Vec<ColumnDescriptor>,
 
@@ -202,7 +202,7 @@ pub struct Capabilities {
     #[serde(
         rename = "supportedChecksumAlgorithms",
         default,
-        skip_serializing_if = "eq_default"
+        skip_serializing_if = "Vec::is_empty"
     )]
     pub supported_checksum_algorithms: Vec<ChecksumAlgorithm>,
 
@@ -727,7 +727,11 @@ pub struct ExceptionDetails {
     pub stack_trace: Option<String>,
 
     /// Details of the exception contained by this exception, if any.
-    #[serde(rename = "innerException", default, skip_serializing_if = "eq_default")]
+    #[serde(
+        rename = "innerException",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub inner_exception: Vec<ExceptionDetails>,
 }
 
@@ -751,7 +755,7 @@ pub struct ExceptionOptions {
     /// A path that selects a single or multiple exceptions in a tree. If 'path' is missing, the whole tree is selected.
     ///
     /// By convention the first segment of the path is a category that is used to group exceptions in the UI.
-    #[serde(rename = "path", default, skip_serializing_if = "eq_default")]
+    #[serde(rename = "path", default, skip_serializing_if = "Vec::is_empty")]
     pub path: Vec<ExceptionPathSegment>,
 
     /// Condition when a thrown exception should result in a break.
@@ -898,7 +902,11 @@ pub struct Message {
     pub format: String,
 
     /// An object used as a dictionary for looking up the variables in the format string.
-    #[serde(rename = "variables", default, skip_serializing_if = "eq_default")]
+    #[serde(
+        rename = "variables",
+        default,
+        skip_serializing_if = "HashMap::is_empty"
+    )]
     pub variables: HashMap<String, String>,
 
     /// If true send to telemetry.
@@ -1101,7 +1109,7 @@ pub struct Source {
     pub origin: Option<String>,
 
     /// An optional list of sources that are related to this source. These may be the source that generated this source.
-    #[serde(rename = "sources", default, skip_serializing_if = "eq_default")]
+    #[serde(rename = "sources", default, skip_serializing_if = "Vec::is_empty")]
     pub sources: Vec<Source>,
 
     /// Optional data that a debug adapter might want to loop through the client.
@@ -1111,7 +1119,7 @@ pub struct Source {
     pub adapter_data: Option<Value>,
 
     /// The checksums associated with this file.
-    #[serde(rename = "checksums", default, skip_serializing_if = "eq_default")]
+    #[serde(rename = "checksums", default, skip_serializing_if = "Vec::is_empty")]
     pub checksums: Vec<Checksum>,
 }
 
@@ -1387,7 +1395,7 @@ pub struct VariablePresentationHint {
     pub kind: Option<VariableKind>,
 
     /// Set of attributes represented as an array of strings. Before introducing additional values, try to use the listed values.
-    #[serde(rename = "attributes", default, skip_serializing_if = "eq_default")]
+    #[serde(rename = "attributes", default, skip_serializing_if = "Vec::is_empty")]
     pub attributes: Vec<VariableAttribute>,
 
     /// Visibility of variable. Before introducing additional values, try to use the listed values.
