@@ -152,7 +152,6 @@ mod tests {
     "locale": "de",
     "linesStartAt1": true,
     "columnsStartAt1": true,
-    "pathFormat": "path",
     "supportsVariableType": true,
     "supportsVariablePaging": true,
     "supportsRunInTerminalRequest": true,
