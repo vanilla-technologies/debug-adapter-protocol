@@ -38,7 +38,7 @@ pub enum ResponseType {
 
 /// Contains request result if success is true and optional error details if success is false.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "camelCase", tag = "command", content = "arguments")]
+#[serde(rename_all = "camelCase", tag = "command", content = "body")]
 pub enum ResponseCommand {
     /// Response to 'attach' request. This is just an acknowledgement, so no body field is required.
     Attach,
