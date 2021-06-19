@@ -1,4 +1,11 @@
-use crate::utils::{eq_default, true_};
+use crate::{
+    types::{
+        DataBreakpoint, ExceptionFilterOptions, ExceptionOptions, FunctionBreakpoint,
+        InstructionBreakpoint, Source, SourceBreakpoint, StackFrameFormat, SteppingGranularity,
+        ValueFormat,
+    },
+    utils::{eq_default, true_},
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
