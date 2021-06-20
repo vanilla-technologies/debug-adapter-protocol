@@ -7,7 +7,7 @@ mod utils;
 
 use events::Event;
 use requests::Request;
-use responses::ResponseType;
+use responses::Response;
 use serde::{Deserialize, Serialize};
 
 type SequenceNumber = u64;
@@ -32,13 +32,7 @@ pub enum ProtocolMessageType {
     Request(Request),
 
     /// Response for a request.
-    Response {
-        /// Sequence number of the corresponding request.
-        request_seq: SequenceNumber,
-
-        #[serde(flatten)]
-        response_type: ResponseType,
-    },
+    Response(Response),
 
     /// A debug adapter initiated event.
     Event(Event),
@@ -46,14 +40,9 @@ pub enum ProtocolMessageType {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        events::ExitedEventBody,
-        requests::{InitializeRequestArguments, PathFormat},
-        responses::Response,
-        types::Capabilities,
-    };
-
     use super::*;
+    use crate::{events::*, requests::*, responses::*, types::*};
+    use std::collections::HashMap;
 
     #[test]
     fn test_deserialize_request_initialize() {
@@ -183,9 +172,9 @@ mod tests {
             actual,
             ProtocolMessage {
                 seq: 1,
-                type_: ProtocolMessageType::Response {
+                type_: ProtocolMessageType::Response(Response {
                     request_seq: 1,
-                    response_type: ResponseType::Success(Response::Initialize(Capabilities {
+                    type_: ResponseType::Success(SuccessResponse::Initialize(Capabilities {
                         supports_configuration_done_request: true,
                         supports_function_breakpoints: true,
                         supports_conditional_breakpoints: true,
@@ -194,7 +183,7 @@ mod tests {
                         supports_instruction_breakpoints: true,
                         ..Default::default()
                     })),
-                }
+                })
             }
         )
     }
@@ -204,9 +193,9 @@ mod tests {
         // given:
         let under_test = ProtocolMessage {
             seq: 1,
-            type_: ProtocolMessageType::Response {
+            type_: ProtocolMessageType::Response(Response {
                 request_seq: 1,
-                response_type: ResponseType::Success(Response::Initialize(Capabilities {
+                type_: ResponseType::Success(SuccessResponse::Initialize(Capabilities {
                     supports_configuration_done_request: true,
                     supports_function_breakpoints: true,
                     supports_conditional_breakpoints: true,
@@ -215,7 +204,7 @@ mod tests {
                     supports_instruction_breakpoints: true,
                     ..Default::default()
                 })),
-            },
+            }),
         };
 
         // when:
@@ -237,6 +226,102 @@ mod tests {
     "supportsHitConditionalBreakpoints": true,
     "supportsDataBreakpoints": true,
     "supportsInstructionBreakpoints": true
+  }
+}"#
+        )
+    }
+
+    #[test]
+    fn test_deserialize_response_error() {
+        // given:
+        let json = r#"{
+            "seq": 1,
+            "type": "response",
+            "request_seq": 2,
+            "success": false,
+            "command": "initialize",
+            "message": "Something went wrong",
+            "body": {
+                "error": {
+                    "id": 3,
+                    "format": "This thing went wrong"
+                }
+            }
+        }"#;
+
+        // when:
+        let actual = serde_json::from_str::<ProtocolMessage>(json).unwrap();
+
+        // then:
+        assert_eq!(
+            actual,
+            ProtocolMessage {
+                seq: 1,
+                type_: ProtocolMessageType::Response(Response {
+                    request_seq: 2,
+                    type_: ResponseType::Error(ErrorResponse {
+                        command: "initialize".to_string(),
+                        message: "Something went wrong".to_string(),
+                        body: ErrorResponseBody {
+                            error: Some(Message {
+                                id: 3,
+                                format: "This thing went wrong".to_string(),
+                                variables: HashMap::new(),
+                                send_telemetry: false,
+                                show_user: false,
+                                url: None,
+                                url_label: None
+                            })
+                        }
+                    }),
+                })
+            }
+        )
+    }
+
+    #[test]
+    fn test_serialize_response_error() {
+        // given:
+        let under_test = ProtocolMessage {
+            seq: 1,
+            type_: ProtocolMessageType::Response(Response {
+                request_seq: 2,
+                type_: ResponseType::Error(ErrorResponse {
+                    command: "initialize".to_string(),
+                    message: "Something went wrong".to_string(),
+                    body: ErrorResponseBody {
+                        error: Some(Message {
+                            id: 3,
+                            format: "This thing went wrong".to_string(),
+                            variables: HashMap::new(),
+                            send_telemetry: false,
+                            show_user: false,
+                            url: None,
+                            url_label: None,
+                        }),
+                    },
+                }),
+            }),
+        };
+
+        // when:
+        let actual = serde_json::to_string_pretty(&under_test).unwrap();
+
+        // then:
+        assert_eq!(
+            actual,
+            r#"{
+  "seq": 1,
+  "type": "response",
+  "request_seq": 2,
+  "success": false,
+  "command": "initialize",
+  "message": "Something went wrong",
+  "body": {
+    "error": {
+      "id": 3,
+      "format": "This thing went wrong"
+    }
   }
 }"#
         )

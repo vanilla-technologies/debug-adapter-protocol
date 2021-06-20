@@ -1,10 +1,11 @@
 use crate::{
     types::{
         Breakpoint, BreakpointLocation, Capabilities, CompletionItem, DataBreakpointAccessType,
-        DisassembledInstruction, ExceptionBreakMode, ExceptionDetails, GotoTarget, Module, Scope,
-        Source, StackFrame, StepInTarget, Thread, Variable, VariablePresentationHint,
+        DisassembledInstruction, ExceptionBreakMode, ExceptionDetails, GotoTarget, Message, Module,
+        Scope, Source, StackFrame, StepInTarget, Thread, Variable, VariablePresentationHint,
     },
     utils::{eq_default, true_},
+    SequenceNumber,
 };
 use serde::{
     de::{Error, Unexpected},
@@ -12,31 +13,49 @@ use serde::{
 };
 use serde_json::{Number, Value};
 
-#[derive(Debug, PartialEq)]
+/// Response for a request.
+#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct Response {
+    /// Sequence number of the corresponding request.
+    pub request_seq: SequenceNumber,
+
+    #[serde(flatten)]
+    pub type_: ResponseType,
+}
+
+#[derive(Debug, Eq, PartialEq)]
 pub enum ResponseType {
-    Success(Response),
-    Error {
-        /// The command requested.
-        command: String,
+    Success(SuccessResponse),
+    Error(ErrorResponse),
+}
 
-        /// Contains the raw error in short form if 'success' is false.
-        /// This raw error might be interpreted by the frontend and is not shown in the
-        /// UI.
-        /// Some predefined values exist.
-        /// Values:
-        /// 'cancelled': request was cancelled.
-        /// etc.
-        message: String,
+#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct ErrorResponse {
+    /// The command requested.
+    pub command: String,
 
-        /// An optional, structured error message.
-        body: Option<Value>,
-    },
+    /// Contains the raw error in short form if 'success' is false.
+    /// This raw error might be interpreted by the frontend and is not shown in the
+    /// UI.
+    /// Some predefined values exist.
+    /// Values:
+    /// 'cancelled': request was cancelled.
+    /// etc.
+    pub message: String,
+
+    pub body: ErrorResponseBody,
+}
+
+#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct ErrorResponseBody {
+    /// An optional, structured error message.
+    pub error: Option<Message>,
 }
 
 /// Contains request result if success is true and optional error details if success is false.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "command", content = "body")]
-pub enum Response {
+pub enum SuccessResponse {
     /// Response to 'attach' request. This is just an acknowledgement, so no body field is required.
     Attach,
 
@@ -519,6 +538,7 @@ pub struct VariablesResponseBody {
 
 // Workaround from https://stackoverflow.com/a/65576570
 // for https://github.com/serde-rs/serde/issues/745
+
 impl<'de> Deserialize<'de> for ResponseType {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         let value = Value::deserialize(d)?;
@@ -534,20 +554,9 @@ impl<'de> Deserialize<'de> for ResponseType {
                 Deserialize::deserialize(value).map_err(|e| Error::custom(e.to_string()))?;
             ResponseType::Success(response)
         } else {
-            #[derive(Debug, Deserialize, PartialEq, Serialize)]
-            struct ResponseTypeError {
-                command: String,
-                message: String,
-                body: Option<Value>,
-            }
-
             let response =
-                ResponseTypeError::deserialize(value).map_err(|e| Error::custom(e.to_string()))?;
-            ResponseType::Error {
-                command: response.command,
-                message: response.message,
-                body: response.body,
-            }
+                Deserialize::deserialize(value).map_err(|e| Error::custom(e.to_string()))?;
+            ResponseType::Error(response)
         })
     }
 }
@@ -584,12 +593,8 @@ impl Serialize for ResponseType {
         #[derive(Serialize)]
         #[serde(untagged)]
         enum ResponseTypeContent<'l> {
-            Success(&'l Response),
-            Error {
-                command: &'l String,
-                message: &'l String,
-                body: &'l Option<Value>,
-            },
+            Success(&'l SuccessResponse),
+            Error(&'l ErrorResponse),
         }
 
         #[derive(Serialize)]
@@ -604,17 +609,9 @@ impl Serialize for ResponseType {
                 success: true,
                 content: ResponseTypeContent::Success(response),
             },
-            ResponseType::Error {
-                command,
-                message,
-                body,
-            } => TaggedResponseType {
+            ResponseType::Error(response) => TaggedResponseType {
                 success: false,
-                content: ResponseTypeContent::Error {
-                    command,
-                    message,
-                    body,
-                },
+                content: ResponseTypeContent::Error(response),
             },
         };
         serializable.serialize(serializer)
