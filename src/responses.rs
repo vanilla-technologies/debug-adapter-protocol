@@ -19,14 +19,12 @@ pub struct Response {
     /// Sequence number of the corresponding request.
     pub request_seq: SequenceNumber,
 
-    #[serde(flatten)]
-    pub type_: ResponseType,
-}
-
-#[derive(Debug, Eq, PartialEq)]
-pub enum ResponseType {
-    Success(SuccessResponse),
-    Error(ErrorResponse),
+    #[serde(
+        flatten,
+        deserialize_with = "deserialize_response_result",
+        serialize_with = "serialize_response_result"
+    )]
+    pub result: Result<SuccessResponse, ErrorResponse>,
 }
 
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -539,26 +537,25 @@ pub struct VariablesResponseBody {
 // Workaround from https://stackoverflow.com/a/65576570
 // for https://github.com/serde-rs/serde/issues/745
 
-impl<'de> Deserialize<'de> for ResponseType {
-    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        let value = Value::deserialize(d)?;
+fn deserialize_response_result<'de, D>(
+    deserializer: D,
+) -> Result<Result<SuccessResponse, ErrorResponse>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = Value::deserialize(deserializer)?;
 
-        let success = value
-            .get("success")
-            .ok_or_else(|| Error::missing_field("success"))?
-            .as_bool()
-            .ok_or_else(|| Error::invalid_type(unexpected_value(&value), &"success bool"))?;
+    let success = value
+        .get("success")
+        .ok_or_else(|| Error::missing_field("success"))?
+        .as_bool()
+        .ok_or_else(|| Error::invalid_type(unexpected_value(&value), &"success bool"))?;
 
-        Ok(if success {
-            let response =
-                Deserialize::deserialize(value).map_err(|e| Error::custom(e.to_string()))?;
-            ResponseType::Success(response)
-        } else {
-            let response =
-                Deserialize::deserialize(value).map_err(|e| Error::custom(e.to_string()))?;
-            ResponseType::Error(response)
-        })
-    }
+    Ok(if success {
+        Ok(Deserialize::deserialize(value).map_err(|e| Error::custom(e.to_string()))?)
+    } else {
+        Err(Deserialize::deserialize(value).map_err(|e| Error::custom(e.to_string()))?)
+    })
 }
 
 fn unexpected_value<'l>(value: &'l Value) -> Unexpected<'l> {
@@ -585,35 +582,36 @@ fn unexpected_number(number: &Number) -> Unexpected<'static> {
     panic!("Unknown number {}", number)
 }
 
-impl Serialize for ResponseType {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        #[derive(Serialize)]
-        #[serde(untagged)]
-        enum ResponseTypeContent<'l> {
-            Success(&'l SuccessResponse),
-            Error(&'l ErrorResponse),
-        }
-
-        #[derive(Serialize)]
-        struct TaggedResponseType<'l> {
-            success: bool,
-            #[serde(flatten)]
-            content: ResponseTypeContent<'l>,
-        }
-
-        let serializable = match self {
-            ResponseType::Success(response) => TaggedResponseType {
-                success: true,
-                content: ResponseTypeContent::Success(response),
-            },
-            ResponseType::Error(response) => TaggedResponseType {
-                success: false,
-                content: ResponseTypeContent::Error(response),
-            },
-        };
-        serializable.serialize(serializer)
+fn serialize_response_result<S>(
+    result: &Result<SuccessResponse, ErrorResponse>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    #[derive(Serialize)]
+    #[serde(untagged)]
+    enum Content<'l> {
+        Success(&'l SuccessResponse),
+        Error(&'l ErrorResponse),
     }
+
+    #[derive(Serialize)]
+    struct TaggedContent<'l> {
+        success: bool,
+        #[serde(flatten)]
+        content: Content<'l>,
+    }
+
+    let serializable = match result {
+        Ok(response) => TaggedContent {
+            success: true,
+            content: Content::Success(response),
+        },
+        Err(response) => TaggedContent {
+            success: false,
+            content: Content::Error(response),
+        },
+    };
+    serializable.serialize(serializer)
 }

@@ -15,8 +15,7 @@ pub type SequenceNumber = u64;
 /// Base class of requests, responses, and events.
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
 pub struct ProtocolMessage {
-    /// Sequence number (also known as message ID). For protocol messages of type
-    /// 'request' this ID can be used to cancel the request.
+    /// Sequence number (also known as message ID). For protocol messages of type 'request' this ID can be used to cancel the request.
     pub seq: SequenceNumber,
 
     /// Message type.
@@ -174,7 +173,7 @@ mod tests {
                 seq: 1,
                 type_: ProtocolMessageType::Response(Response {
                     request_seq: 1,
-                    type_: ResponseType::Success(SuccessResponse::Initialize(Capabilities {
+                    result: Ok(SuccessResponse::Initialize(Capabilities {
                         supports_configuration_done_request: true,
                         supports_function_breakpoints: true,
                         supports_conditional_breakpoints: true,
@@ -195,7 +194,7 @@ mod tests {
             seq: 1,
             type_: ProtocolMessageType::Response(Response {
                 request_seq: 1,
-                type_: ResponseType::Success(SuccessResponse::Initialize(Capabilities {
+                result: Ok(SuccessResponse::Initialize(Capabilities {
                     supports_configuration_done_request: true,
                     supports_function_breakpoints: true,
                     supports_conditional_breakpoints: true,
@@ -259,7 +258,7 @@ mod tests {
                 seq: 1,
                 type_: ProtocolMessageType::Response(Response {
                     request_seq: 2,
-                    type_: ResponseType::Error(ErrorResponse {
+                    result: Err(ErrorResponse {
                         command: "initialize".to_string(),
                         message: "Something went wrong".to_string(),
                         body: ErrorResponseBody {
@@ -286,7 +285,7 @@ mod tests {
             seq: 1,
             type_: ProtocolMessageType::Response(Response {
                 request_seq: 2,
-                type_: ResponseType::Error(ErrorResponse {
+                result: Err(ErrorResponse {
                     command: "initialize".to_string(),
                     message: "Something went wrong".to_string(),
                     body: ErrorResponseBody {
