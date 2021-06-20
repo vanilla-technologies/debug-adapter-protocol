@@ -10,10 +10,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 
-/// Object containing arguments for the command.
+/// A client or debug adapter initiated request.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "command", content = "arguments")]
-pub enum RequestCommand {
+pub enum Request {
     /// The attach request is sent from the client to the debug adapter to attach to a debuggee that is already running.
     ///
     /// Since attaching is debugger/runtime specific, the arguments for this request are not part of this specification.

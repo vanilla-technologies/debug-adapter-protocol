@@ -14,10 +14,7 @@ use serde_json::{Number, Value};
 
 #[derive(Debug, PartialEq)]
 pub enum ResponseType {
-    Success {
-        /// The command requested.
-        command: ResponseCommand,
-    },
+    Success(Response),
     Error {
         /// The command requested.
         command: String,
@@ -39,7 +36,7 @@ pub enum ResponseType {
 /// Contains request result if success is true and optional error details if success is false.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "command", content = "body")]
-pub enum ResponseCommand {
+pub enum Response {
     /// Response to 'attach' request. This is just an acknowledgement, so no body field is required.
     Attach,
 
@@ -533,9 +530,9 @@ impl<'de> Deserialize<'de> for ResponseType {
             .ok_or_else(|| Error::invalid_type(unexpected_value(&value), &"success bool"))?;
 
         Ok(if success {
-            let command =
+            let response =
                 Deserialize::deserialize(value).map_err(|e| Error::custom(e.to_string()))?;
-            ResponseType::Success { command }
+            ResponseType::Success(response)
         } else {
             #[derive(Debug, Deserialize, PartialEq, Serialize)]
             struct ResponseTypeError {
@@ -587,10 +584,7 @@ impl Serialize for ResponseType {
         #[derive(Serialize)]
         #[serde(untagged)]
         enum ResponseTypeContent<'l> {
-            Success {
-                #[serde(flatten)]
-                command: &'l ResponseCommand,
-            },
+            Success(&'l Response),
             Error {
                 command: &'l String,
                 message: &'l String,
@@ -606,9 +600,9 @@ impl Serialize for ResponseType {
         }
 
         let serializable = match self {
-            ResponseType::Success { command } => TaggedResponseType {
+            ResponseType::Success(response) => TaggedResponseType {
                 success: true,
-                content: ResponseTypeContent::Success { command },
+                content: ResponseTypeContent::Success(response),
             },
             ResponseType::Error {
                 command,

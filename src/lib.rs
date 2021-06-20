@@ -6,7 +6,7 @@ pub mod types;
 mod utils;
 
 use events::Event;
-use requests::RequestCommand;
+use requests::Request;
 use responses::ResponseType;
 use serde::{Deserialize, Serialize};
 
@@ -29,11 +29,8 @@ pub struct ProtocolMessage {
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum ProtocolMessageType {
     /// A client or debug adapter initiated request.
-    Request {
-        /// The command to execute.
-        #[serde(flatten)]
-        command: RequestCommand,
-    },
+    Request(Request),
+
     /// Response for a request.
     Response {
         /// Sequence number of the corresponding request.
@@ -42,12 +39,9 @@ pub enum ProtocolMessageType {
         #[serde(flatten)]
         response_type: ResponseType,
     },
+
     /// A debug adapter initiated event.
-    Event {
-        /// Type of event.
-        #[serde(flatten)]
-        event: Event,
-    },
+    Event(Event),
 }
 
 #[cfg(test)]
@@ -55,7 +49,7 @@ mod tests {
     use crate::{
         events::ExitedEventBody,
         requests::{InitializeRequestArguments, PathFormat},
-        responses::ResponseCommand,
+        responses::Response,
         types::Capabilities,
     };
 
@@ -92,8 +86,8 @@ mod tests {
             actual,
             ProtocolMessage {
                 seq: 1,
-                type_: ProtocolMessageType::Request {
-                    command: RequestCommand::Initialize(InitializeRequestArguments {
+                type_: ProtocolMessageType::Request(Request::Initialize(
+                    InitializeRequestArguments {
                         client_id: Some("vscode".to_string()),
                         client_name: Some("Visual Studio Code".to_string()),
                         adapter_id: "mock".to_string(),
@@ -107,8 +101,8 @@ mod tests {
                         supports_memory_references: false,
                         supports_progress_reporting: true,
                         supports_invalidated_event: true,
-                    }),
-                },
+                    }
+                ),),
             }
         );
     }
@@ -118,23 +112,21 @@ mod tests {
         // given:
         let under_test = ProtocolMessage {
             seq: 1,
-            type_: ProtocolMessageType::Request {
-                command: RequestCommand::Initialize(InitializeRequestArguments {
-                    client_id: Some("vscode".to_string()),
-                    client_name: Some("Visual Studio Code".to_string()),
-                    adapter_id: "mock".to_string(),
-                    locale: Some("de".to_string()),
-                    lines_start_at_1: true,
-                    columns_start_at_1: true,
-                    path_format: PathFormat::Path,
-                    supports_variable_type: true,
-                    supports_variable_paging: true,
-                    supports_run_in_terminal_request: true,
-                    supports_memory_references: false,
-                    supports_progress_reporting: true,
-                    supports_invalidated_event: true,
-                }),
-            },
+            type_: ProtocolMessageType::Request(Request::Initialize(InitializeRequestArguments {
+                client_id: Some("vscode".to_string()),
+                client_name: Some("Visual Studio Code".to_string()),
+                adapter_id: "mock".to_string(),
+                locale: Some("de".to_string()),
+                lines_start_at_1: true,
+                columns_start_at_1: true,
+                path_format: PathFormat::Path,
+                supports_variable_type: true,
+                supports_variable_paging: true,
+                supports_run_in_terminal_request: true,
+                supports_memory_references: false,
+                supports_progress_reporting: true,
+                supports_invalidated_event: true,
+            })),
         };
 
         // when:
@@ -193,17 +185,15 @@ mod tests {
                 seq: 1,
                 type_: ProtocolMessageType::Response {
                     request_seq: 1,
-                    response_type: ResponseType::Success {
-                        command: ResponseCommand::Initialize(Capabilities {
-                            supports_configuration_done_request: true,
-                            supports_function_breakpoints: true,
-                            supports_conditional_breakpoints: true,
-                            supports_hit_conditional_breakpoints: true,
-                            supports_data_breakpoints: true,
-                            supports_instruction_breakpoints: true,
-                            ..Default::default()
-                        })
-                    },
+                    response_type: ResponseType::Success(Response::Initialize(Capabilities {
+                        supports_configuration_done_request: true,
+                        supports_function_breakpoints: true,
+                        supports_conditional_breakpoints: true,
+                        supports_hit_conditional_breakpoints: true,
+                        supports_data_breakpoints: true,
+                        supports_instruction_breakpoints: true,
+                        ..Default::default()
+                    })),
                 }
             }
         )
@@ -216,17 +206,15 @@ mod tests {
             seq: 1,
             type_: ProtocolMessageType::Response {
                 request_seq: 1,
-                response_type: ResponseType::Success {
-                    command: ResponseCommand::Initialize(Capabilities {
-                        supports_configuration_done_request: true,
-                        supports_function_breakpoints: true,
-                        supports_conditional_breakpoints: true,
-                        supports_hit_conditional_breakpoints: true,
-                        supports_data_breakpoints: true,
-                        supports_instruction_breakpoints: true,
-                        ..Default::default()
-                    }),
-                },
+                response_type: ResponseType::Success(Response::Initialize(Capabilities {
+                    supports_configuration_done_request: true,
+                    supports_function_breakpoints: true,
+                    supports_conditional_breakpoints: true,
+                    supports_hit_conditional_breakpoints: true,
+                    supports_data_breakpoints: true,
+                    supports_instruction_breakpoints: true,
+                    ..Default::default()
+                })),
             },
         };
 
@@ -274,9 +262,7 @@ mod tests {
             actual,
             ProtocolMessage {
                 seq: 1,
-                type_: ProtocolMessageType::Event {
-                    event: Event::Exited(ExitedEventBody { exit_code: 0 })
-                }
+                type_: ProtocolMessageType::Event(Event::Exited(ExitedEventBody { exit_code: 0 }))
             }
         )
     }
@@ -286,9 +272,7 @@ mod tests {
         // given:
         let under_test = ProtocolMessage {
             seq: 1,
-            type_: ProtocolMessageType::Event {
-                event: Event::Exited(ExitedEventBody { exit_code: 0 }),
-            },
+            type_: ProtocolMessageType::Event(Event::Exited(ExitedEventBody { exit_code: 0 })),
         };
 
         // when:

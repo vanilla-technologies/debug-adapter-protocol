@@ -5,7 +5,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-/// Event-specific information.
+/// A debug adapter initiated event.
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "event", content = "body")]
 pub enum Event {
