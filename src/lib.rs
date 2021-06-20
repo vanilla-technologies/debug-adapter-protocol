@@ -10,7 +10,7 @@ use requests::Request;
 use responses::Response;
 use serde::{Deserialize, Serialize};
 
-type SequenceNumber = u64;
+pub type SequenceNumber = u64;
 
 /// Base class of requests, responses, and events.
 #[derive(Debug, Deserialize, PartialEq, Serialize)]
