@@ -57,7 +57,7 @@ pub enum Request {
     /// So it is the last request in the sequence of configuration requests (which was started by the 'initialized' event).
     ///
     /// Clients should only call this request if the capability 'supportsConfigurationDoneRequest' is true.
-    ConfigurationDone(ConfigurationDoneRequestArguments),
+    ConfigurationDone,
 
     /// The request starts the debuggee to run again.
     Continue(ContinueRequestArguments),
@@ -130,7 +130,7 @@ pub enum Request {
     /// Retrieves the set of all sources currently loaded by the debugged process.
     ///
     /// Clients should only call this request if the capability 'supportsLoadedSourcesRequest' is true.
-    LoadedSources(LoadedSourcesRequestArguments),
+    LoadedSources,
 
     /// Modules can be retrieved from the debug adapter with this request which can either return all modules or a range of modules to support paging.
     ///
@@ -361,9 +361,6 @@ pub struct CompletionsRequestArguments {
     #[serde(rename = "line", skip_serializing_if = "Option::is_none")]
     pub line: Option<i32>,
 }
-
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub struct ConfigurationDoneRequestArguments {}
 
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ContinueRequestArguments {
@@ -621,9 +618,6 @@ pub struct LaunchRequestArguments {
     #[serde(rename = "__restart", skip_serializing_if = "Option::is_none")]
     pub restart: Option<Value>,
 }
-
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub struct LoadedSourcesRequestArguments {}
 
 #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ModulesRequestArguments {
