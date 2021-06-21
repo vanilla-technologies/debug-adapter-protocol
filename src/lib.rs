@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 pub type SequenceNumber = u64;
 
 /// Base class of requests, responses, and events.
-#[derive(Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ProtocolMessage {
     /// Sequence number (also known as message ID). For protocol messages of type 'request' this ID can be used to cancel the request.
     pub seq: SequenceNumber,
@@ -24,7 +24,7 @@ pub struct ProtocolMessage {
 }
 
 /// Message type.
-#[derive(Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum ProtocolMessageType {
     /// A client or debug adapter initiated request.

@@ -11,7 +11,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 
 /// A client or debug adapter initiated request.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "command", content = "arguments")]
 pub enum Request {
     /// The attach request is sent from the client to the debug adapter to attach to a debuggee that is already running.
@@ -294,7 +294,7 @@ pub enum Request {
     Variables(VariablesRequestArguments),
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct AttachRequestArguments {
     /// Optional data from the previous, restarted session.
     ///
@@ -305,7 +305,7 @@ pub struct AttachRequestArguments {
     pub restart: Option<Value>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct BreakpointLocationsRequestArguments {
     /// The source location of the breakpoints; either 'source.path' or 'source.reference' must be specified.
     #[serde(rename = "source")]
@@ -328,7 +328,7 @@ pub struct BreakpointLocationsRequestArguments {
     pub end_column: Option<i32>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct CancelRequestArguments {
     /// The ID (attribute 'seq') of the request to cancel. If missing no request is cancelled.
     ///
@@ -343,7 +343,7 @@ pub struct CancelRequestArguments {
     pub progress_id: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct CompletionsRequestArguments {
     /// Returns completions in the scope of this stack frame. If not specified, the completions are returned for the global scope.
     #[serde(rename = "frameId", skip_serializing_if = "Option::is_none")]
@@ -362,7 +362,7 @@ pub struct CompletionsRequestArguments {
     pub line: Option<i32>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ContinueRequestArguments {
     /// Continue execution for the specified thread (if possible).
     ///
@@ -371,7 +371,7 @@ pub struct ContinueRequestArguments {
     pub thread_id: i32,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct DataBreakpointInfoRequestArguments {
     /// Reference to the Variable container if the data breakpoint is requested for a child of the container.
     #[serde(rename = "variablesReference", skip_serializing_if = "Option::is_none")]
@@ -384,7 +384,7 @@ pub struct DataBreakpointInfoRequestArguments {
     pub name: String,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct DisassembleRequestArguments {
     /// Memory reference to the base location containing the instructions to disassemble.
     #[serde(rename = "memoryReference")]
@@ -413,7 +413,7 @@ pub struct DisassembleRequestArguments {
     pub resolve_symbols: bool,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct DisconnectRequestArguments {
     /// A value of true indicates that this 'disconnect' request is part of a restart sequence.
     #[serde(rename = "restart", default, skip_serializing_if = "eq_default")]
@@ -440,7 +440,7 @@ pub struct DisconnectRequestArguments {
     pub suspend_debuggee: bool,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct EvaluateRequestArguments {
     /// The expression to evaluate.
     #[serde(rename = "expression")]
@@ -461,7 +461,7 @@ pub struct EvaluateRequestArguments {
     pub format: Option<ValueFormat>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum EvaluateRequestContext {
     /// evaluate is run in a watch.
@@ -479,14 +479,14 @@ pub enum EvaluateRequestContext {
     Clipboard,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ExceptionInfoRequestArguments {
     /// Thread for which exception information should be retrieved.
     #[serde(rename = "threadId")]
     pub thread_id: i32,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct GotoRequestArguments {
     /// Set the goto target for this thread.
     #[serde(rename = "threadId")]
@@ -497,7 +497,7 @@ pub struct GotoRequestArguments {
     pub target_id: i32,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct GotoTargetsRequestArguments {
     /// The source location for which the goto targets are determined.
     #[serde(rename = "source")]
@@ -512,7 +512,7 @@ pub struct GotoTargetsRequestArguments {
     pub column: Option<i32>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct InitializeRequestArguments {
     /// The ID of the (frontend) client using this adapter.
     #[serde(rename = "clientID", skip_serializing_if = "Option::is_none")]
@@ -591,7 +591,7 @@ pub struct InitializeRequestArguments {
     pub supports_invalidated_event: bool,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PathFormat {
     Path,
@@ -604,7 +604,7 @@ impl Default for PathFormat {
     }
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct LaunchRequestArguments {
     /// If noDebug is true the launch request should launch the program without enabling debugging.
     #[serde(rename = "noDebug", default, skip_serializing_if = "eq_default")]
@@ -619,7 +619,7 @@ pub struct LaunchRequestArguments {
     pub restart: Option<Value>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ModulesRequestArguments {
     /// The index of the first module to return; if omitted modules start at 0.
     #[serde(rename = "startModule", default, skip_serializing_if = "eq_default")]
@@ -630,7 +630,7 @@ pub struct ModulesRequestArguments {
     pub module_count: i32,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct NextRequestArguments {
     /// Execute 'next' for this thread.
     #[serde(rename = "threadId")]
@@ -641,14 +641,14 @@ pub struct NextRequestArguments {
     pub granularity: SteppingGranularity,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct PauseRequestArguments {
     /// Pause execution for this thread.
     #[serde(rename = "threadId")]
     pub thread_id: i32,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ReadMemoryRequestArguments {
     /// Memory reference to the base location from which data should be read.
     #[serde(rename = "memoryReference")]
@@ -663,28 +663,28 @@ pub struct ReadMemoryRequestArguments {
     pub count: i32,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct RestartFrameRequestArguments {
     /// Restart this stackframe.
     #[serde(rename = "frameId")]
     pub frame_id: i32,
 }
 
-// #[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+// #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 // pub struct RestartRequestArguments {
 //   /// The latest version of the 'launch' or 'attach' configuration.
 //   #[serde(rename="arguments", skip_serializing_if = "Option::is_none")]
 //   pub arguments: Option<TODO oneOf>,
 // }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ReverseContinueRequestArguments {
     /// Execute 'reverseContinue' for this thread.
     #[serde(rename = "threadId")]
     pub thread_id: i32,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct RunInTerminalRequestArguments {
     /// What kind of terminal to launch.
     #[serde(rename = "kind", skip_serializing_if = "Option::is_none")]
@@ -707,7 +707,7 @@ pub struct RunInTerminalRequestArguments {
     pub env: HashMap<String, Option<String>>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum TerminalKind {
     Integrated,
@@ -715,14 +715,14 @@ pub enum TerminalKind {
     External,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ScopesRequestArguments {
     /// Retrieve the scopes for this stackframe.
     #[serde(rename = "frameId")]
     pub frame_id: i32,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SetBreakpointsRequestArguments {
     /// The source location of the breakpoints; either 'source.path' or 'source.reference' must be specified.
     #[serde(rename = "source")]
@@ -741,14 +741,14 @@ pub struct SetBreakpointsRequestArguments {
     pub source_modified: bool,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SetDataBreakpointsRequestArguments {
     /// The contents of this array replaces all existing data breakpoints. An empty array clears all data breakpoints.
     #[serde(rename = "breakpoints")]
     pub breakpoints: Vec<DataBreakpoint>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SetExceptionBreakpointsRequestArguments {
     /// Set of exception filters specified by their ID. The set of all possible exception filters is defined by the 'exceptionBreakpointFilters' capability. The 'filter' and 'filterOptions' sets are additive.
     #[serde(rename = "filters")]
@@ -773,7 +773,7 @@ pub struct SetExceptionBreakpointsRequestArguments {
     pub exception_options: Vec<ExceptionOptions>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SetExpressionRequestArguments {
     /// The l-value expression to assign to.
     #[serde(rename = "expression")]
@@ -792,21 +792,21 @@ pub struct SetExpressionRequestArguments {
     pub format: Option<ValueFormat>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SetFunctionBreakpointsRequestArguments {
     /// The function names of the breakpoints.
     #[serde(rename = "breakpoints")]
     pub breakpoints: Vec<FunctionBreakpoint>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SetInstructionBreakpointsRequestArguments {
     /// The instruction references of the breakpoints
     #[serde(rename = "breakpoints")]
     pub breakpoints: Vec<InstructionBreakpoint>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SetVariableRequestArguments {
     /// The reference of the variable container.
     #[serde(rename = "variablesReference")]
@@ -825,7 +825,7 @@ pub struct SetVariableRequestArguments {
     pub format: Option<ValueFormat>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SourceRequestArguments {
     /// Specifies the source content to load. Either source.path or source.sourceReference must be specified.
     #[serde(rename = "source", skip_serializing_if = "Option::is_none")]
@@ -838,7 +838,7 @@ pub struct SourceRequestArguments {
     pub source_reference: i32,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct StackTraceRequestArguments {
     /// Retrieve the stacktrace for this thread.
     #[serde(rename = "threadId")]
@@ -859,7 +859,7 @@ pub struct StackTraceRequestArguments {
     pub format: Option<StackFrameFormat>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct StepBackRequestArguments {
     /// Execute 'stepBack' for this thread.
     #[serde(rename = "threadId")]
@@ -870,7 +870,7 @@ pub struct StepBackRequestArguments {
     pub granularity: SteppingGranularity,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct StepInRequestArguments {
     /// Execute 'stepIn' for this thread.
     #[serde(rename = "threadId")]
@@ -885,14 +885,14 @@ pub struct StepInRequestArguments {
     pub granularity: SteppingGranularity,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct StepInTargetsRequestArguments {
     /// The stack frame for which to retrieve the possible stepIn targets.
     #[serde(rename = "frameId")]
     pub frame_id: i32,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct StepOutRequestArguments {
     /// Execute 'stepOut' for this thread.
     #[serde(rename = "threadId")]
@@ -903,21 +903,21 @@ pub struct StepOutRequestArguments {
     pub granularity: SteppingGranularity,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct TerminateRequestArguments {
     /// A value of true indicates that this 'terminate' request is part of a restart sequence.
     #[serde(rename = "restart", default, skip_serializing_if = "eq_default")]
     pub restart: bool,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct TerminateThreadsRequestArguments {
     /// Ids of threads to be terminated.
     #[serde(rename = "threadIds", default, skip_serializing_if = "Vec::is_empty")]
     pub thread_ids: Vec<i32>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct VariablesRequestArguments {
     /// The Variable reference.
     #[serde(rename = "variablesReference")]
@@ -942,7 +942,7 @@ pub struct VariablesRequestArguments {
     pub format: Option<ValueFormat>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum VariablesFilter {
     Indexed,

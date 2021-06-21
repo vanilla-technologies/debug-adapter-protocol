@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 /// A debug adapter initiated event.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "event", content = "body")]
 pub enum Event {
     /// The event indicates that some information about a breakpoint has changed.
@@ -102,7 +102,7 @@ pub enum Event {
     Thread(ThreadEventBody),
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct BreakpointEventBody {
     /// The reason for the event.
     #[serde(rename = "reason")]
@@ -114,7 +114,7 @@ pub struct BreakpointEventBody {
 }
 
 /// The reason for the event.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum BreakpointEventReason {
     #[serde(rename = "changed")]
     Changed,
@@ -126,14 +126,14 @@ pub enum BreakpointEventReason {
     Removed,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct CapabilitiesEventBody {
     /// The set of updated capabilities.
     #[serde(rename = "capabilities")]
     pub capabilities: Capabilities,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ContinuedEventBody {
     /// The thread which was continued.
     #[serde(rename = "threadId")]
@@ -148,14 +148,14 @@ pub struct ContinuedEventBody {
     pub all_threads_continued: bool,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ExitedEventBody {
     /// The exit code returned from the debuggee.
     #[serde(rename = "exitCode")]
     pub exit_code: i32,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct InvalidatedEventBody {
     /// Optional set of logical areas that got invalidated. This property has a hint characteristic: a client can only be expected to make a 'best effort' in honouring the areas but there are no guarantees. If this property is missing, empty, or if values are not understand the client should assume a single value 'all'.
     #[serde(rename = "areas", default, skip_serializing_if = "Vec::is_empty")]
@@ -170,7 +170,7 @@ pub struct InvalidatedEventBody {
     pub stack_frame_id: Option<i32>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct LoadedSourceEventBody {
     /// The reason for the event.
     #[serde(rename = "reason")]
@@ -182,7 +182,7 @@ pub struct LoadedSourceEventBody {
 }
 
 /// The reason for the event.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum LoadedSourceEventReason {
     #[serde(rename = "new")]
     New,
@@ -194,7 +194,7 @@ pub enum LoadedSourceEventReason {
     Removed,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ModuleEventBody {
     /// The reason for the event.
     #[serde(rename = "reason")]
@@ -206,7 +206,7 @@ pub struct ModuleEventBody {
 }
 
 /// The reason for the event.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ModuleEventReason {
     #[serde(rename = "new")]
     New,
@@ -218,7 +218,7 @@ pub enum ModuleEventReason {
     Removed,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct OutputEventBody {
     /// The output category. If not specified, 'console' is assumed.
     #[serde(rename = "category", default, skip_serializing_if = "eq_default")]
@@ -254,7 +254,7 @@ pub struct OutputEventBody {
 }
 
 /// The output category. If not specified, 'console' is assumed.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum OutputCategory {
     #[serde(rename = "console")]
     Console,
@@ -276,7 +276,7 @@ impl Default for OutputCategory {
 }
 
 /// Support for keeping an output log organized by grouping related messages.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum OutputGroup {
     /// Start a new group in expanded mode. Subsequent output events are members of the group and should be shown indented.
     ///
@@ -297,7 +297,7 @@ pub enum OutputGroup {
     End,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ProcessEventBody {
     /// The logical name of the process. This is usually the full path to process's executable file. Example: /home/example/myproj/program.js.
     #[serde(rename = "name")]
@@ -321,7 +321,7 @@ pub struct ProcessEventBody {
 }
 
 /// Describes how the debug engine started debugging this process.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ProcessStartMethod {
     /// Process was launched under the debugger.
     #[serde(rename = "launch")]
@@ -336,7 +336,7 @@ pub enum ProcessStartMethod {
     AttachForSuspendedLaunch,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ProgressEndEventBody {
     /// The ID that was introduced in the initial 'ProgressStartEvent'.
     #[serde(rename = "progressId")]
@@ -347,7 +347,7 @@ pub struct ProgressEndEventBody {
     pub message: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ProgressStartEventBody {
     /// An ID that must be used in subsequent 'progressUpdate' and 'progressEnd' events to make them refer to the same progress reporting.
     ///
@@ -384,7 +384,7 @@ pub struct ProgressStartEventBody {
     pub percentage: Option<u8>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ProgressUpdateEventBody {
     /// The ID that was introduced in the initial 'progressStart' event.
     #[serde(rename = "progressId")]
@@ -399,7 +399,7 @@ pub struct ProgressUpdateEventBody {
     pub percentage: Option<u8>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct StoppedEventBody {
     /// The reason for the event.
     ///
@@ -457,7 +457,7 @@ pub struct StoppedEventBody {
 /// The reason for the event.
 ///
 /// For backward compatibility this string is shown in the UI if the 'description' attribute is missing (but it must not be translated).
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum StoppedEventReason {
     #[serde(rename = "step")]
     Step,
@@ -487,7 +487,7 @@ pub enum StoppedEventReason {
     InstructionBreakpoint,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct TerminatedEventBody {
     /// A debug adapter may set 'restart' to true (or to an arbitrary object) to request that the front end restarts the session.
     ///
@@ -496,7 +496,7 @@ pub struct TerminatedEventBody {
     pub restart: Option<Value>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ThreadEventBody {
     /// The reason for the event.
     #[serde(rename = "reason")]
@@ -508,7 +508,7 @@ pub struct ThreadEventBody {
 }
 
 /// The reason for the event.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ThreadEventReason {
     #[serde(rename = "started")]
     Started,

@@ -14,7 +14,7 @@ use serde::{
 use serde_json::{Number, Value};
 
 /// Response for a request.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Response {
     /// Sequence number of the corresponding request.
     pub request_seq: SequenceNumber,
@@ -27,7 +27,7 @@ pub struct Response {
     pub result: Result<SuccessResponse, ErrorResponse>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ErrorResponse {
     /// The command requested.
     pub command: String,
@@ -44,14 +44,14 @@ pub struct ErrorResponse {
     pub body: ErrorResponseBody,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ErrorResponseBody {
     /// An optional, structured error message.
     pub error: Option<Message>,
 }
 
 /// Contains request result if success is true and optional error details if success is false.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "command", content = "body")]
 pub enum SuccessResponse {
     /// Response to 'attach' request. This is just an acknowledgement, so no body field is required.
@@ -201,21 +201,21 @@ pub enum SuccessResponse {
     Variables(VariablesResponseBody),
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct BreakpointLocationsResponseBody {
     /// Sorted set of possible breakpoint locations.
     #[serde(rename = "breakpoints")]
     pub breakpoints: Vec<BreakpointLocation>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct CompletionsResponseBody {
     /// The possible completions for .
     #[serde(rename = "targets")]
     pub targets: Vec<CompletionItem>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ContinueResponseBody {
     /// If true, the 'continue' request has ignored the specified thread and continued all threads instead.
     ///
@@ -224,7 +224,7 @@ pub struct ContinueResponseBody {
     pub all_threads_continued: bool,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct DataBreakpointInfoResponseBody {
     /// An identifier for the data on which a data breakpoint can be registered with the setDataBreakpoints request or null if no data breakpoint is available.
     #[serde(rename = "dataId")]
@@ -243,14 +243,14 @@ pub struct DataBreakpointInfoResponseBody {
     pub can_persist: bool,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct DisassembleResponseBody {
     /// The list of disassembled instructions.
     #[serde(rename = "instructions")]
     pub instructions: Vec<DisassembledInstruction>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct EvaluateResponseBody {
     /// The result of the evaluate request.
     #[serde(rename = "result")]
@@ -297,7 +297,7 @@ pub struct EvaluateResponseBody {
     pub memory_reference: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ExceptionInfoResponseBody {
     /// ID of the exception that was thrown.
     #[serde(rename = "exceptionId")]
@@ -316,21 +316,21 @@ pub struct ExceptionInfoResponseBody {
     pub details: Option<ExceptionDetails>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct GotoTargetsResponseBody {
     /// The possible goto targets of the specified location.
     #[serde(rename = "targets")]
     pub targets: Vec<GotoTarget>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct LoadedSourcesResponseBody {
     /// Set of loaded sources.
     #[serde(rename = "sources")]
     pub sources: Vec<Source>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ModulesResponseBody {
     /// All modules or range of modules.
     #[serde(rename = "modules")]
@@ -341,7 +341,7 @@ pub struct ModulesResponseBody {
     pub total_modules: Option<i32>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ReadMemoryResponseBody {
     /// The address of the first byte of data returned.
     ///
@@ -360,7 +360,7 @@ pub struct ReadMemoryResponseBody {
     pub data: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct RunInTerminalResponseBody {
     /// The process ID. The value should be less than or equal to 2147483647 (2^31-1).
     #[serde(rename = "processId", skip_serializing_if = "Option::is_none")]
@@ -371,14 +371,14 @@ pub struct RunInTerminalResponseBody {
     pub shell_process_id: Option<i32>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ScopesResponseBody {
     /// The scopes of the stackframe. If the array has length zero, there are no scopes available.
     #[serde(rename = "scopes")]
     pub scopes: Vec<Scope>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SetBreakpointsResponseBody {
     /// Information about the breakpoints.
     ///
@@ -387,14 +387,14 @@ pub struct SetBreakpointsResponseBody {
     pub breakpoints: Vec<Breakpoint>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SetDataBreakpointsResponseBody {
     /// Information about the data breakpoints. The array elements correspond to the elements of the input argument 'breakpoints' array.
     #[serde(rename = "breakpoints")]
     pub breakpoints: Vec<Breakpoint>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SetExceptionBreakpointsResponseBody {
     /// Information about the exception breakpoints or filters.
     ///
@@ -403,7 +403,7 @@ pub struct SetExceptionBreakpointsResponseBody {
     pub breakpoints: Option<Vec<Breakpoint>>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SetExpressionResponseBody {
     /// The new value of the expression.
     #[serde(rename = "value")]
@@ -442,21 +442,21 @@ pub struct SetExpressionResponseBody {
     pub indexed_variables: Option<i32>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SetFunctionBreakpointsResponseBody {
     /// Information about the breakpoints. The array elements correspond to the elements of the 'breakpoints' array.
     #[serde(rename = "breakpoints")]
     pub breakpoints: Vec<Breakpoint>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SetInstructionBreakpointsResponseBody {
     /// Information about the breakpoints. The array elements correspond to the elements of the 'breakpoints' array.
     #[serde(rename = "breakpoints")]
     pub breakpoints: Vec<Breakpoint>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SetVariableResponseBody {
     /// The new value of the variable.
     #[serde(rename = "value")]
@@ -489,7 +489,7 @@ pub struct SetVariableResponseBody {
     pub indexed_variables: Option<i32>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SourceResponseBody {
     /// Content of the source reference.
     #[serde(rename = "content")]
@@ -500,7 +500,7 @@ pub struct SourceResponseBody {
     pub mime_type: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct StackTraceResponseBody {
     /// The frames of the stackframe. If the array has length zero, there are no stackframes available.
     ///
@@ -513,21 +513,21 @@ pub struct StackTraceResponseBody {
     pub total_frames: Option<i32>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct StepInTargetsResponseBody {
     /// The possible stepIn targets of the specified source location.
     #[serde(rename = "targets")]
     pub targets: Vec<StepInTarget>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ThreadsResponseBody {
     /// All threads.
     #[serde(rename = "threads")]
     pub threads: Vec<Thread>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct VariablesResponseBody {
     /// All (or a range) of variables for the given variable reference.
     #[serde(rename = "variables")]
@@ -589,14 +589,14 @@ fn serialize_response_result<S>(
 where
     S: Serializer,
 {
-    #[derive(Serialize)]
+    #[derive(Clone, Serialize)]
     #[serde(untagged)]
     enum Content<'l> {
         Success(&'l SuccessResponse),
         Error(&'l ErrorResponse),
     }
 
-    #[derive(Serialize)]
+    #[derive(Clone, Serialize)]
     struct TaggedContent<'l> {
         success: bool,
         #[serde(flatten)]

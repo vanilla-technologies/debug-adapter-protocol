@@ -4,7 +4,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 
 /// Information about a Breakpoint created in setBreakpoints, setFunctionBreakpoints, setInstructionBreakpoints, or setDataBreakpoints.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Breakpoint {
     /// An optional identifier for the breakpoint. It is needed if breakpoint events are used to update or remove breakpoints.
     #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
@@ -57,7 +57,7 @@ pub struct Breakpoint {
 }
 
 /// Properties of a breakpoint location returned from the 'breakpointLocations' request.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct BreakpointLocation {
     /// Start line of breakpoint location.
     #[serde(rename = "line")]
@@ -77,7 +77,7 @@ pub struct BreakpointLocation {
 }
 
 /// Information about the capabilities of a debug adapter.
-#[derive(Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Capabilities {
     /// The debug adapter supports the 'configurationDone' request.
     #[serde(
@@ -376,7 +376,7 @@ pub struct Capabilities {
 }
 
 /// The checksum of an item calculated by the specified algorithm.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Checksum {
     /// The algorithm used to calculate this checksum.
     #[serde(rename = "algorithm")]
@@ -388,7 +388,7 @@ pub struct Checksum {
 }
 
 /// Names of checksum algorithms that may be supported by a debug adapter.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ChecksumAlgorithm {
     #[serde(rename = "MD5")]
     MD5,
@@ -408,7 +408,7 @@ pub enum ChecksumAlgorithm {
 /// and what the column's label should be.
 ///
 /// It is only used if the underlying UI actually supports this level of customization.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ColumnDescriptor {
     /// Name of the attribute rendered in this column.
     #[serde(rename = "attributeName")]
@@ -431,7 +431,7 @@ pub struct ColumnDescriptor {
     pub width: Option<i32>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ColumnDescriptorType {
     #[serde(rename = "string")]
     String,
@@ -453,7 +453,7 @@ impl Default for ColumnDescriptorType {
 }
 
 /// CompletionItems are the suggestions returned from the CompletionsRequest.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct CompletionItem {
     /// The label of this completion item. By default this is also the text that is inserted when selecting this completion.
     #[serde(rename = "label")]
@@ -505,7 +505,7 @@ pub struct CompletionItem {
 }
 
 /// Some predefined types for the CompletionItem. Please note that not all clients have specific icons for all of them.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum CompletionItemType {
     #[serde(rename = "method")]
     Method,
@@ -566,7 +566,7 @@ pub enum CompletionItemType {
 }
 
 /// Properties of a data breakpoint passed to the setDataBreakpoints request.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct DataBreakpoint {
     /// An id representing the data. This id is returned from the dataBreakpointInfo request.
     #[serde(rename = "dataId")]
@@ -588,7 +588,7 @@ pub struct DataBreakpoint {
 }
 
 /// This enumeration defines all possible access types for data breakpoints.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum DataBreakpointAccessType {
     #[serde(rename = "read")]
     Read,
@@ -601,7 +601,7 @@ pub enum DataBreakpointAccessType {
 }
 
 /// Represents a single disassembled instruction.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct DisassembledInstruction {
     /// The address of the instruction. Treated as a hex value if prefixed with '0x', or as a decimal value otherwise.
     #[serde(rename = "address")]
@@ -653,7 +653,7 @@ pub struct DisassembledInstruction {
 /// unhandled: breaks when exception unhandled,
 ///
 /// userUnhandled: breaks if the exception is not handled by user code.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ExceptionBreakMode {
     #[serde(rename = "never")]
     Never,
@@ -669,7 +669,7 @@ pub enum ExceptionBreakMode {
 }
 
 /// An ExceptionBreakpointsFilter is shown in the UI as an filter option for configuring how exceptions are dealt with.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ExceptionBreakpointsFilter {
     /// The internal ID of the filter option. This value is passed to the 'setExceptionBreakpoints' request.
     #[serde(rename = "filter")]
@@ -704,7 +704,7 @@ pub struct ExceptionBreakpointsFilter {
 }
 
 /// Detailed information about an exception that has occurred.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ExceptionDetails {
     /// Message contained in the exception.
     #[serde(rename = "message", skip_serializing_if = "Option::is_none")]
@@ -736,7 +736,7 @@ pub struct ExceptionDetails {
 }
 
 /// An ExceptionFilterOptions is used to specify an exception filter together with a condition for the setExceptionsFilter request.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ExceptionFilterOptions {
     /// ID of an exception filter returned by the 'exceptionBreakpointFilters' capability.
     #[serde(rename = "filterId")]
@@ -750,7 +750,7 @@ pub struct ExceptionFilterOptions {
 }
 
 /// An ExceptionOptions assigns configuration options to a set of exceptions.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ExceptionOptions {
     /// A path that selects a single or multiple exceptions in a tree. If 'path' is missing, the whole tree is selected.
     ///
@@ -768,7 +768,7 @@ pub struct ExceptionOptions {
 /// If a segment consists of more than one name, it matches the names provided if 'negate' is false or missing or
 ///
 /// it matches anything except the names provided if 'negate' is true.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ExceptionPathSegment {
     /// If false or missing this segment matches the names provided, otherwise it matches anything except the names provided.
     #[serde(rename = "negate", default, skip_serializing_if = "eq_default")]
@@ -780,7 +780,7 @@ pub struct ExceptionPathSegment {
 }
 
 /// Properties of a breakpoint passed to the setFunctionBreakpoints request.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct FunctionBreakpoint {
     /// The name of the function.
     #[serde(rename = "name")]
@@ -804,7 +804,7 @@ pub struct FunctionBreakpoint {
 /// A GotoTarget describes a code location that can be used as a target in the 'goto' request.
 ///
 /// The possible goto targets can be determined via the 'gotoTargets' request.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct GotoTarget {
     /// Unique identifier for a goto target. This is used in the goto request.
     #[serde(rename = "id")]
@@ -839,7 +839,7 @@ pub struct GotoTarget {
 }
 
 /// Properties of a breakpoint passed to the setInstructionBreakpoints request
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct InstructionBreakpoint {
     /// The instruction reference of the breakpoint.
     ///
@@ -869,7 +869,7 @@ pub struct InstructionBreakpoint {
 }
 
 /// Logical areas that can be invalidated by the 'invalidated' event.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum InvalidatedAreas {
     /// All previously fetched data has become invalid and needs to be refetched.
     #[serde(rename = "all")]
@@ -889,7 +889,7 @@ pub enum InvalidatedAreas {
 }
 
 /// A structured message object. Used to return errors from requests.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Message {
     /// Unique identifier for the message.
     #[serde(rename = "id")]
@@ -941,7 +941,7 @@ pub struct Message {
 /// To avoid an unnecessary proliferation of additional attributes with similar semantics but different names
 ///
 /// we recommend to re-use attributes from the 'recommended' list below first, and only introduce new attributes if nothing appropriate could be found.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Module {
     /// Unique identifier for the module.
     #[serde(rename = "id")]
@@ -990,7 +990,7 @@ pub struct Module {
     pub address_range: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(untagged)]
 pub enum ModuleId {
     Integer(i32),
@@ -1000,14 +1000,14 @@ pub enum ModuleId {
 /// The ModulesViewDescriptor is the container for all declarative configuration options of a ModuleView.
 ///
 /// For now it only specifies the columns to be shown in the modules view.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ModulesViewDescriptor {
     #[serde(rename = "columns")]
     pub columns: Vec<ColumnDescriptor>,
 }
 
 /// A Scope is a named container for variables. Optionally a scope can map to a source or a range within a source.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Scope {
     /// Name of the scope such as 'Arguments', 'Locals', or 'Registers'. This string is shown in the UI as is and can be translated.
     #[serde(rename = "name")]
@@ -1058,7 +1058,7 @@ pub struct Scope {
     pub end_column: Option<i32>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum ScopePresentationHint {
     /// Scope contains method arguments.
     #[serde(rename = "arguments")]
@@ -1076,7 +1076,7 @@ pub enum ScopePresentationHint {
 /// A Source is a descriptor for source code.
 ///
 /// It is returned from the debug adapter as part of a StackFrame and it is used by clients when specifying breakpoints.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Source {
     /// The short name of the source. Every source returned from the debug adapter has a name.
     ///
@@ -1126,7 +1126,7 @@ pub struct Source {
 /// An optional hint for how to present the source in the UI.
 ///
 /// A value of 'deemphasize' can be used to indicate that the source is not available or that it is skipped on stepping.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum SourcePresentationHint {
     #[serde(rename = "normal")]
     Normal,
@@ -1139,7 +1139,7 @@ pub enum SourcePresentationHint {
 }
 
 /// Properties of a breakpoint or logpoint passed to the setBreakpoints request.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct SourceBreakpoint {
     /// The source line of the breakpoint or logpoint.
     #[serde(rename = "line")]
@@ -1173,7 +1173,7 @@ pub struct SourceBreakpoint {
 }
 
 /// A Stackframe contains the source location.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct StackFrame {
     /// An identifier for the stack frame. It must be unique across all threads.
     ///
@@ -1227,7 +1227,7 @@ pub struct StackFrame {
     pub presentation_hint: Option<StackFramePresentationHint>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum StackFramePresentationHint {
     #[serde(rename = "normal")]
     Normal,
@@ -1240,7 +1240,7 @@ pub enum StackFramePresentationHint {
 }
 
 /// Provides formatting information for a stack frame.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct StackFrameFormat {
     /// Displays parameters for the stack frame.
     #[serde(rename = "parameters", skip_serializing_if = "Option::is_none")]
@@ -1272,7 +1272,7 @@ pub struct StackFrameFormat {
 }
 
 /// A StepInTarget can be used in the 'stepIn' request and determines into which single target the stepIn request should step.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct StepInTarget {
     /// Unique identifier for a stepIn target.
     #[serde(rename = "id")]
@@ -1284,7 +1284,7 @@ pub struct StepInTarget {
 }
 
 /// The granularity of one 'step' in the stepping requests 'next', 'stepIn', 'stepOut', and 'stepBack'.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum SteppingGranularity {
     /// The step should allow the program to run until the current statement has finished executing.
     ///
@@ -1310,7 +1310,7 @@ impl Default for SteppingGranularity {
 }
 
 /// A Thread
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Thread {
     /// Unique identifier for the thread.
     #[serde(rename = "id")]
@@ -1322,7 +1322,7 @@ pub struct Thread {
 }
 
 /// Provides formatting information for a value.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ValueFormat {
     /// Display the value in hex.
     #[serde(rename = "hex", skip_serializing_if = "Option::is_none")]
@@ -1340,7 +1340,7 @@ pub struct ValueFormat {
 /// If the number of named or indexed children is large, the numbers should be returned via the optional 'namedVariables' and 'indexedVariables' attributes.
 ///
 /// The client can use this optional information to present the children in a paged UI and fetch them in chunks.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Variable {
     /// The variable's name.
     #[serde(rename = "name")]
@@ -1388,7 +1388,7 @@ pub struct Variable {
 }
 
 /// Optional properties of a variable that can be used to determine how to render the variable in the UI.
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct VariablePresentationHint {
     /// The kind of variable. Before introducing additional values, try to use the listed values.
     #[serde(rename = "kind", skip_serializing_if = "Option::is_none")]
@@ -1403,7 +1403,7 @@ pub struct VariablePresentationHint {
     pub visibility: Option<VariableVisibility>,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum VariableKind {
     /// Indicates that the object is a property.
     #[serde(rename = "property")]
@@ -1452,7 +1452,7 @@ pub enum VariableKind {
     DataBreakpoint,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum VariableAttribute {
     /// Indicates that the object is static.
     #[serde(rename = "static")]
@@ -1487,7 +1487,7 @@ pub enum VariableAttribute {
     HasDataBreakpoint,
 }
 
-#[derive(Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum VariableVisibility {
     #[serde(rename = "public")]
     Public,
