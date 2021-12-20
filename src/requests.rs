@@ -7,7 +7,7 @@ use crate::{
     utils::{eq_default, true_},
 };
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{Map, Value};
 use std::collections::HashMap;
 
 /// A client or debug adapter initiated request.
@@ -617,6 +617,10 @@ pub struct LaunchRequestArguments {
     /// The client should leave the data intact.
     #[serde(rename = "__restart", skip_serializing_if = "Option::is_none")]
     pub restart: Option<Value>,
+
+    /// Additional attributes are implementation specific.
+    #[serde(flatten)]
+    pub additional_attributes: Map<String, Value>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
