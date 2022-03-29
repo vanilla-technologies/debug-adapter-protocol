@@ -256,15 +256,23 @@ pub struct OutputEventBody {
 /// The output category. If not specified, 'console' is assumed.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub enum OutputCategory {
+    /// Show the output in the client's default message UI, e.g. a 'debug console'. This category should only be used for informational output from the debugger (as opposed to the debuggee).
     #[serde(rename = "console")]
     Console,
 
+    /// A hint for the client to show the ouput in the client's UI for important and highly visible information, e.g. as a popup notification. This category should only be used for important messages from the debugger (as opposed to the debuggee). Since this category value is a hint, clients might ignore the hint and assume the 'console' category.
+    #[serde(rename = "important")]
+    Important,
+
+    /// Show the output as normal program output from the debuggee.
     #[serde(rename = "stdout")]
     Stdout,
 
+    /// Show the output as error program output from the debuggee.
     #[serde(rename = "stderr")]
     Stderr,
 
+    /// Send the output to telemetry instead of showing it to the user.
     #[serde(rename = "telemetry")]
     Telemetry,
 }
