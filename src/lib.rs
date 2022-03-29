@@ -9,6 +9,7 @@ use events::Event;
 use requests::Request;
 use responses::Response;
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 
 pub type SequenceNumber = u64;
 
@@ -21,6 +22,13 @@ pub struct ProtocolMessage {
     /// Message type.
     #[serde(flatten)]
     pub type_: ProtocolMessageType,
+}
+
+impl Display for ProtocolMessage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let json = serde_json::to_string(&self).unwrap();
+        write!(f, "Content-Length: {}\r\n\r\n{}", json.len(), json)
+    }
 }
 
 /// Message type.
