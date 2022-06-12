@@ -5,10 +5,12 @@ use crate::{
         ValueFormat,
     },
     utils::{eq_default, true_},
+    ProtocolMessageContent,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::collections::HashMap;
+use typed_builder::TypedBuilder;
 
 /// A client or debug adapter initiated request.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -293,8 +295,13 @@ pub enum Request {
     /// An optional filter can be used to limit the fetched children to either named or indexed children.
     Variables(VariablesRequestArguments),
 }
+impl From<Request> for ProtocolMessageContent {
+    fn from(request: Request) -> Self {
+        Self::Request(request)
+    }
+}
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct AttachRequestArguments {
     /// Optional data from the previous, restarted session.
     ///
@@ -302,10 +309,25 @@ pub struct AttachRequestArguments {
     ///
     /// The client should leave the data intact.
     #[serde(rename = "__restart", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub restart: Option<Value>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<AttachRequestArguments> for Request {
+    fn from(args: AttachRequestArguments) -> Self {
+        Self::Attach(args)
+    }
+}
+impl From<AttachRequestArguments> for ProtocolMessageContent {
+    fn from(args: AttachRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct BreakpointLocationsRequestArguments {
     /// The source location of the breakpoints; either 'source.path' or 'source.reference' must be specified.
     #[serde(rename = "source")]
@@ -317,36 +339,70 @@ pub struct BreakpointLocationsRequestArguments {
 
     /// Optional start column of range to search possible breakpoint locations in. If no start column is given, the first column in the start line is assumed.
     #[serde(rename = "column", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub column: Option<i32>,
 
     /// Optional end line of range to search possible breakpoint locations in. If no end line is given, then the end line is assumed to be the start line.
     #[serde(rename = "endLine", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub end_line: Option<i32>,
 
     /// Optional end column of range to search possible breakpoint locations in. If no end column is given, then it is assumed to be in the last column of the end line.
     #[serde(rename = "endColumn", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub end_column: Option<i32>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<BreakpointLocationsRequestArguments> for Request {
+    fn from(args: BreakpointLocationsRequestArguments) -> Self {
+        Self::BreakpointLocations(args)
+    }
+}
+impl From<BreakpointLocationsRequestArguments> for ProtocolMessageContent {
+    fn from(args: BreakpointLocationsRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct CancelRequestArguments {
     /// The ID (attribute 'seq') of the request to cancel. If missing no request is cancelled.
     ///
     /// Both a 'requestId' and a 'progressId' can be specified in one request.
     #[serde(rename = "requestId", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub request_id: Option<i32>,
 
     /// The ID (attribute 'progressId') of the progress to cancel. If missing no progress is cancelled.
     ///
     /// Both a 'requestId' and a 'progressId' can be specified in one request.
     #[serde(rename = "progressId", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub progress_id: Option<String>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<CancelRequestArguments> for Request {
+    fn from(args: CancelRequestArguments) -> Self {
+        Self::Cancel(args)
+    }
+}
+impl From<CancelRequestArguments> for ProtocolMessageContent {
+    fn from(args: CancelRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct CompletionsRequestArguments {
     /// Returns completions in the scope of this stack frame. If not specified, the completions are returned for the global scope.
     #[serde(rename = "frameId", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub frame_id: Option<i32>,
 
     /// One or more source lines. Typically this is the text a user has typed into the debug console before he asked for completion.
@@ -359,22 +415,52 @@ pub struct CompletionsRequestArguments {
 
     /// An optional line for which to determine the completion proposals. If missing the first line of the text is assumed.
     #[serde(rename = "line", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub line: Option<i32>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<CompletionsRequestArguments> for Request {
+    fn from(args: CompletionsRequestArguments) -> Self {
+        Self::Completions(args)
+    }
+}
+impl From<CompletionsRequestArguments> for ProtocolMessageContent {
+    fn from(args: CompletionsRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ContinueRequestArguments {
     /// Continue execution for the specified thread (if possible).
     ///
     /// If the backend cannot continue on a single thread but will continue on all threads, it should set the 'allThreadsContinued' attribute in the response to true.
     #[serde(rename = "threadId")]
     pub thread_id: i32,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ContinueRequestArguments> for Request {
+    fn from(args: ContinueRequestArguments) -> Self {
+        Self::Continue(args)
+    }
+}
+impl From<ContinueRequestArguments> for ProtocolMessageContent {
+    fn from(args: ContinueRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct DataBreakpointInfoRequestArguments {
     /// Reference to the Variable container if the data breakpoint is requested for a child of the container.
     #[serde(rename = "variablesReference", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub variables_reference: Option<i32>,
 
     /// The name of the Variable's child to obtain data breakpoint information for.
@@ -382,9 +468,23 @@ pub struct DataBreakpointInfoRequestArguments {
     /// If variablesReference isn’t provided, this can be an expression.
     #[serde(rename = "name")]
     pub name: String,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<DataBreakpointInfoRequestArguments> for Request {
+    fn from(args: DataBreakpointInfoRequestArguments) -> Self {
+        Self::DataBreakpointInfo(args)
+    }
+}
+impl From<DataBreakpointInfoRequestArguments> for ProtocolMessageContent {
+    fn from(args: DataBreakpointInfoRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct DisassembleRequestArguments {
     /// Memory reference to the base location containing the instructions to disassemble.
     #[serde(rename = "memoryReference")]
@@ -392,6 +492,7 @@ pub struct DisassembleRequestArguments {
 
     /// Optional offset (in bytes) to be applied to the reference location before disassembling. Can be negative.
     #[serde(rename = "offset", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub offset: i32,
 
     /// Optional offset (in instructions) to be applied after the byte offset (if any) before disassembling. Can be negative.
@@ -400,6 +501,7 @@ pub struct DisassembleRequestArguments {
         default,
         skip_serializing_if = "eq_default"
     )]
+    #[builder(default)]
     pub instruction_offset: i32,
 
     /// Number of instructions to disassemble starting at the specified location and offset.
@@ -410,13 +512,29 @@ pub struct DisassembleRequestArguments {
 
     /// If true, the adapter should attempt to resolve memory addresses and other values to symbolic names.
     #[serde(rename = "resolveSymbols", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub resolve_symbols: bool,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<DisassembleRequestArguments> for Request {
+    fn from(args: DisassembleRequestArguments) -> Self {
+        Self::Disassemble(args)
+    }
+}
+impl From<DisassembleRequestArguments> for ProtocolMessageContent {
+    fn from(args: DisassembleRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct DisconnectRequestArguments {
     /// A value of true indicates that this 'disconnect' request is part of a restart sequence.
     #[serde(rename = "restart", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub restart: bool,
 
     /// Indicates whether the debuggee should be terminated when the debugger is disconnected.
@@ -425,6 +543,7 @@ pub struct DisconnectRequestArguments {
     ///
     /// The attribute is only honored by a debug adapter if the capability 'supportTerminateDebuggee' is true.
     #[serde(rename = "terminateDebuggee", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub terminate_debuggee: Option<bool>,
 
     /// Indicates whether the debuggee should stay suspended when the debugger is disconnected.
@@ -437,10 +556,25 @@ pub struct DisconnectRequestArguments {
         default,
         skip_serializing_if = "eq_default"
     )]
+    #[builder(default)]
     pub suspend_debuggee: bool,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<DisconnectRequestArguments> for Request {
+    fn from(args: DisconnectRequestArguments) -> Self {
+        Self::Disconnect(args)
+    }
+}
+impl From<DisconnectRequestArguments> for ProtocolMessageContent {
+    fn from(args: DisconnectRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct EvaluateRequestArguments {
     /// The expression to evaluate.
     #[serde(rename = "expression")]
@@ -448,17 +582,34 @@ pub struct EvaluateRequestArguments {
 
     /// Evaluate the expression in the scope of this stack frame. If not specified, the expression is evaluated in the global scope.
     #[serde(rename = "frameId", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub frame_id: Option<i32>,
 
     /// The context in which the evaluate request is run.
     #[serde(rename = "context", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub context: Option<EvaluateRequestContext>,
 
     /// Specifies details on how to format the Evaluate result.
     ///
     /// The attribute is only honored by a debug adapter if the capability 'supportsValueFormattingOptions' is true.
     #[serde(rename = "format", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub format: Option<ValueFormat>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<EvaluateRequestArguments> for Request {
+    fn from(args: EvaluateRequestArguments) -> Self {
+        Self::Evaluate(args)
+    }
+}
+impl From<EvaluateRequestArguments> for ProtocolMessageContent {
+    fn from(args: EvaluateRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -479,14 +630,28 @@ pub enum EvaluateRequestContext {
     Clipboard,
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ExceptionInfoRequestArguments {
     /// Thread for which exception information should be retrieved.
     #[serde(rename = "threadId")]
     pub thread_id: i32,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ExceptionInfoRequestArguments> for Request {
+    fn from(args: ExceptionInfoRequestArguments) -> Self {
+        Self::ExceptionInfo(args)
+    }
+}
+impl From<ExceptionInfoRequestArguments> for ProtocolMessageContent {
+    fn from(args: ExceptionInfoRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct GotoRequestArguments {
     /// Set the goto target for this thread.
     #[serde(rename = "threadId")]
@@ -495,9 +660,23 @@ pub struct GotoRequestArguments {
     /// The location where the debuggee will continue to run.
     #[serde(rename = "targetId")]
     pub target_id: i32,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<GotoRequestArguments> for Request {
+    fn from(args: GotoRequestArguments) -> Self {
+        Self::Goto(args)
+    }
+}
+impl From<GotoRequestArguments> for ProtocolMessageContent {
+    fn from(args: GotoRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct GotoTargetsRequestArguments {
     /// The source location for which the goto targets are determined.
     #[serde(rename = "source")]
@@ -509,17 +688,34 @@ pub struct GotoTargetsRequestArguments {
 
     /// An optional column location for which the goto targets are determined.
     #[serde(rename = "column", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub column: Option<i32>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<GotoTargetsRequestArguments> for Request {
+    fn from(args: GotoTargetsRequestArguments) -> Self {
+        Self::GotoTargets(args)
+    }
+}
+impl From<GotoTargetsRequestArguments> for ProtocolMessageContent {
+    fn from(args: GotoTargetsRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct InitializeRequestArguments {
     /// The ID of the (frontend) client using this adapter.
     #[serde(rename = "clientID", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub client_id: Option<String>,
 
     /// The human readable name of the (frontend) client using this adapter.
     #[serde(rename = "clientName", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub client_name: Option<String>,
 
     /// The ID of the debug adapter.
@@ -528,18 +724,22 @@ pub struct InitializeRequestArguments {
 
     /// The ISO-639 locale of the (frontend) client using this adapter, e.g. en-US or de-CH.
     #[serde(rename = "locale", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub locale: Option<String>,
 
     /// If true all line numbers are 1-based (default).
     #[serde(rename = "linesStartAt1", default = "true_")]
+    #[builder(default = true)]
     pub lines_start_at_1: bool,
 
     /// If true all column numbers are 1-based (default).
     #[serde(rename = "columnsStartAt1", default = "true_")]
+    #[builder(default = true)]
     pub columns_start_at_1: bool,
 
     /// Determines in what format paths are specified. The default is 'path', which is the native format.
     #[serde(rename = "pathFormat", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub path_format: PathFormat,
 
     /// Client supports the optional type attribute for variables.
@@ -548,6 +748,7 @@ pub struct InitializeRequestArguments {
         default,
         skip_serializing_if = "eq_default"
     )]
+    #[builder(default)]
     pub supports_variable_type: bool,
 
     /// Client supports the paging of variables.
@@ -556,6 +757,7 @@ pub struct InitializeRequestArguments {
         default,
         skip_serializing_if = "eq_default"
     )]
+    #[builder(default)]
     pub supports_variable_paging: bool,
 
     /// Client supports the runInTerminal request.
@@ -564,6 +766,7 @@ pub struct InitializeRequestArguments {
         default,
         skip_serializing_if = "eq_default"
     )]
+    #[builder(default)]
     pub supports_run_in_terminal_request: bool,
 
     /// Client supports memory references.
@@ -572,6 +775,7 @@ pub struct InitializeRequestArguments {
         default,
         skip_serializing_if = "eq_default"
     )]
+    #[builder(default)]
     pub supports_memory_references: bool,
 
     /// Client supports progress reporting.
@@ -580,6 +784,7 @@ pub struct InitializeRequestArguments {
         default,
         skip_serializing_if = "eq_default"
     )]
+    #[builder(default)]
     pub supports_progress_reporting: bool,
 
     /// Client supports the invalidated event.
@@ -588,7 +793,22 @@ pub struct InitializeRequestArguments {
         default,
         skip_serializing_if = "eq_default"
     )]
+    #[builder(default)]
     pub supports_invalidated_event: bool,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<InitializeRequestArguments> for Request {
+    fn from(args: InitializeRequestArguments) -> Self {
+        Self::Initialize(args)
+    }
+}
+impl From<InitializeRequestArguments> for ProtocolMessageContent {
+    fn from(args: InitializeRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -604,10 +824,11 @@ impl Default for PathFormat {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct LaunchRequestArguments {
     /// If noDebug is true the launch request should launch the program without enabling debugging.
     #[serde(rename = "noDebug", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub no_debug: bool,
 
     /// Optional data from the previous, restarted session.
@@ -616,25 +837,57 @@ pub struct LaunchRequestArguments {
     ///
     /// The client should leave the data intact.
     #[serde(rename = "__restart", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub restart: Option<Value>,
 
     /// Additional attributes are implementation specific.
     #[serde(flatten)]
+    #[builder(default)]
     pub additional_attributes: Map<String, Value>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<LaunchRequestArguments> for Request {
+    fn from(args: LaunchRequestArguments) -> Self {
+        Self::Launch(args)
+    }
+}
+impl From<LaunchRequestArguments> for ProtocolMessageContent {
+    fn from(args: LaunchRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ModulesRequestArguments {
     /// The index of the first module to return; if omitted modules start at 0.
     #[serde(rename = "startModule", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub start_module: i32,
 
     /// The number of modules to return. If moduleCount is not specified or 0, all modules are returned.
     #[serde(rename = "moduleCount", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub module_count: i32,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ModulesRequestArguments> for Request {
+    fn from(args: ModulesRequestArguments) -> Self {
+        Self::Modules(args)
+    }
+}
+impl From<ModulesRequestArguments> for ProtocolMessageContent {
+    fn from(args: ModulesRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct NextRequestArguments {
     /// Execute 'next' for this thread.
     #[serde(rename = "threadId")]
@@ -642,17 +895,46 @@ pub struct NextRequestArguments {
 
     /// Optional granularity to step. If no granularity is specified, a granularity of 'statement' is assumed.
     #[serde(rename = "granularity", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub granularity: SteppingGranularity,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<NextRequestArguments> for Request {
+    fn from(args: NextRequestArguments) -> Self {
+        Self::Next(args)
+    }
+}
+impl From<NextRequestArguments> for ProtocolMessageContent {
+    fn from(args: NextRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct PauseRequestArguments {
     /// Pause execution for this thread.
     #[serde(rename = "threadId")]
     pub thread_id: i32,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<PauseRequestArguments> for Request {
+    fn from(args: PauseRequestArguments) -> Self {
+        Self::Pause(args)
+    }
+}
+impl From<PauseRequestArguments> for ProtocolMessageContent {
+    fn from(args: PauseRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ReadMemoryRequestArguments {
     /// Memory reference to the base location from which data should be read.
     #[serde(rename = "memoryReference")]
@@ -660,18 +942,47 @@ pub struct ReadMemoryRequestArguments {
 
     /// Optional offset (in bytes) to be applied to the reference location before reading data. Can be negative.
     #[serde(rename = "offset", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub offset: i32,
 
     /// Number of bytes to read at the specified location and offset.
     #[serde(rename = "count")]
     pub count: i32,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ReadMemoryRequestArguments> for Request {
+    fn from(args: ReadMemoryRequestArguments) -> Self {
+        Self::ReadMemory(args)
+    }
+}
+impl From<ReadMemoryRequestArguments> for ProtocolMessageContent {
+    fn from(args: ReadMemoryRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct RestartFrameRequestArguments {
     /// Restart this stackframe.
     #[serde(rename = "frameId")]
     pub frame_id: i32,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<RestartFrameRequestArguments> for Request {
+    fn from(args: RestartFrameRequestArguments) -> Self {
+        Self::RestartFrame(args)
+    }
+}
+impl From<RestartFrameRequestArguments> for ProtocolMessageContent {
+    fn from(args: RestartFrameRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
 // #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -681,21 +992,37 @@ pub struct RestartFrameRequestArguments {
 //   pub arguments: Option<TODO oneOf>,
 // }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ReverseContinueRequestArguments {
     /// Execute 'reverseContinue' for this thread.
     #[serde(rename = "threadId")]
     pub thread_id: i32,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ReverseContinueRequestArguments> for Request {
+    fn from(args: ReverseContinueRequestArguments) -> Self {
+        Self::ReverseContinue(args)
+    }
+}
+impl From<ReverseContinueRequestArguments> for ProtocolMessageContent {
+    fn from(args: ReverseContinueRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct RunInTerminalRequestArguments {
     /// What kind of terminal to launch.
     #[serde(rename = "kind", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub kind: Option<TerminalKind>,
 
     /// Optional title of the terminal.
     #[serde(rename = "title", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub title: Option<String>,
 
     /// Working directory for the command. For non-empty, valid paths this typically results in execution of a change directory command.
@@ -708,7 +1035,22 @@ pub struct RunInTerminalRequestArguments {
 
     /// Environment key-value pairs that are added to or removed from the default environment.
     #[serde(rename = "env", default, skip_serializing_if = "HashMap::is_empty")]
+    #[builder(default)]
     pub env: HashMap<String, Option<String>>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<RunInTerminalRequestArguments> for Request {
+    fn from(args: RunInTerminalRequestArguments) -> Self {
+        Self::RunInTerminal(args)
+    }
+}
+impl From<RunInTerminalRequestArguments> for ProtocolMessageContent {
+    fn from(args: RunInTerminalRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -719,14 +1061,28 @@ pub enum TerminalKind {
     External,
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ScopesRequestArguments {
     /// Retrieve the scopes for this stackframe.
     #[serde(rename = "frameId")]
     pub frame_id: i32,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ScopesRequestArguments> for Request {
+    fn from(args: ScopesRequestArguments) -> Self {
+        Self::Scopes(args)
+    }
+}
+impl From<ScopesRequestArguments> for ProtocolMessageContent {
+    fn from(args: ScopesRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SetBreakpointsRequestArguments {
     /// The source location of the breakpoints; either 'source.path' or 'source.reference' must be specified.
     #[serde(rename = "source")]
@@ -734,25 +1090,56 @@ pub struct SetBreakpointsRequestArguments {
 
     /// The code locations of the breakpoints.
     #[serde(rename = "breakpoints", default, skip_serializing_if = "Vec::is_empty")]
+    #[builder(default)]
     pub breakpoints: Vec<SourceBreakpoint>,
 
     /// Deprecated: The code locations of the breakpoints.
     #[serde(rename = "lines", default, skip_serializing_if = "Vec::is_empty")]
+    #[builder(default)]
     pub lines: Vec<i32>,
 
     /// A value of true indicates that the underlying source has been modified which results in new breakpoint locations.
     #[serde(rename = "sourceModified", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub source_modified: bool,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SetBreakpointsRequestArguments> for Request {
+    fn from(args: SetBreakpointsRequestArguments) -> Self {
+        Self::SetBreakpoints(args)
+    }
+}
+impl From<SetBreakpointsRequestArguments> for ProtocolMessageContent {
+    fn from(args: SetBreakpointsRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SetDataBreakpointsRequestArguments {
     /// The contents of this array replaces all existing data breakpoints. An empty array clears all data breakpoints.
     #[serde(rename = "breakpoints")]
     pub breakpoints: Vec<DataBreakpoint>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SetDataBreakpointsRequestArguments> for Request {
+    fn from(args: SetDataBreakpointsRequestArguments) -> Self {
+        Self::SetDataBreakpoints(args)
+    }
+}
+impl From<SetDataBreakpointsRequestArguments> for ProtocolMessageContent {
+    fn from(args: SetDataBreakpointsRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SetExceptionBreakpointsRequestArguments {
     /// Set of exception filters specified by their ID. The set of all possible exception filters is defined by the 'exceptionBreakpointFilters' capability. The 'filter' and 'filterOptions' sets are additive.
     #[serde(rename = "filters")]
@@ -764,6 +1151,7 @@ pub struct SetExceptionBreakpointsRequestArguments {
         default,
         skip_serializing_if = "Vec::is_empty"
     )]
+    #[builder(default)]
     pub filter_options: Vec<ExceptionFilterOptions>,
 
     /// Configuration options for selected exceptions.
@@ -774,10 +1162,25 @@ pub struct SetExceptionBreakpointsRequestArguments {
         default,
         skip_serializing_if = "Vec::is_empty"
     )]
+    #[builder(default)]
     pub exception_options: Vec<ExceptionOptions>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SetExceptionBreakpointsRequestArguments> for Request {
+    fn from(args: SetExceptionBreakpointsRequestArguments) -> Self {
+        Self::SetExceptionBreakpoints(args)
+    }
+}
+impl From<SetExceptionBreakpointsRequestArguments> for ProtocolMessageContent {
+    fn from(args: SetExceptionBreakpointsRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SetExpressionRequestArguments {
     /// The l-value expression to assign to.
     #[serde(rename = "expression")]
@@ -789,28 +1192,72 @@ pub struct SetExpressionRequestArguments {
 
     /// Evaluate the expressions in the scope of this stack frame. If not specified, the expressions are evaluated in the global scope.
     #[serde(rename = "frameId", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub frame_id: Option<i32>,
 
     /// Specifies how the resulting value should be formatted.
     #[serde(rename = "format", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub format: Option<ValueFormat>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SetExpressionRequestArguments> for Request {
+    fn from(args: SetExpressionRequestArguments) -> Self {
+        Self::SetExpression(args)
+    }
+}
+impl From<SetExpressionRequestArguments> for ProtocolMessageContent {
+    fn from(args: SetExpressionRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SetFunctionBreakpointsRequestArguments {
     /// The function names of the breakpoints.
     #[serde(rename = "breakpoints")]
     pub breakpoints: Vec<FunctionBreakpoint>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SetFunctionBreakpointsRequestArguments> for Request {
+    fn from(args: SetFunctionBreakpointsRequestArguments) -> Self {
+        Self::SetFunctionBreakpoints(args)
+    }
+}
+impl From<SetFunctionBreakpointsRequestArguments> for ProtocolMessageContent {
+    fn from(args: SetFunctionBreakpointsRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SetInstructionBreakpointsRequestArguments {
     /// The instruction references of the breakpoints
     #[serde(rename = "breakpoints")]
     pub breakpoints: Vec<InstructionBreakpoint>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SetInstructionBreakpointsRequestArguments> for Request {
+    fn from(args: SetInstructionBreakpointsRequestArguments) -> Self {
+        Self::SetInstructionBreakpoints(args)
+    }
+}
+impl From<SetInstructionBreakpointsRequestArguments> for ProtocolMessageContent {
+    fn from(args: SetInstructionBreakpointsRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SetVariableRequestArguments {
     /// The reference of the variable container.
     #[serde(rename = "variablesReference")]
@@ -826,13 +1273,29 @@ pub struct SetVariableRequestArguments {
 
     /// Specifies details on how to format the response value.
     #[serde(rename = "format", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub format: Option<ValueFormat>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SetVariableRequestArguments> for Request {
+    fn from(args: SetVariableRequestArguments) -> Self {
+        Self::SetVariable(args)
+    }
+}
+impl From<SetVariableRequestArguments> for ProtocolMessageContent {
+    fn from(args: SetVariableRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SourceRequestArguments {
     /// Specifies the source content to load. Either source.path or source.sourceReference must be specified.
     #[serde(rename = "source", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub source: Option<Source>,
 
     /// The reference to the source. This is the same as source.sourceReference.
@@ -840,9 +1303,23 @@ pub struct SourceRequestArguments {
     /// This is provided for backward compatibility since old backends do not understand the 'source' attribute.
     #[serde(rename = "sourceReference")]
     pub source_reference: i32,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SourceRequestArguments> for Request {
+    fn from(args: SourceRequestArguments) -> Self {
+        Self::Source(args)
+    }
+}
+impl From<SourceRequestArguments> for ProtocolMessageContent {
+    fn from(args: SourceRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct StackTraceRequestArguments {
     /// Retrieve the stacktrace for this thread.
     #[serde(rename = "threadId")]
@@ -850,20 +1327,37 @@ pub struct StackTraceRequestArguments {
 
     /// The index of the first frame to return; if omitted frames start at 0.
     #[serde(rename = "startFrame", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub start_frame: i32,
 
     /// The maximum number of frames to return. If levels is not specified or 0, all frames are returned.
     #[serde(rename = "levels", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub levels: i32,
 
     /// Specifies details on how to format the stack frames.
     ///
     /// The attribute is only honored by a debug adapter if the capability 'supportsValueFormattingOptions' is true.
     #[serde(rename = "format", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub format: Option<StackFrameFormat>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<StackTraceRequestArguments> for Request {
+    fn from(args: StackTraceRequestArguments) -> Self {
+        Self::StackTrace(args)
+    }
+}
+impl From<StackTraceRequestArguments> for ProtocolMessageContent {
+    fn from(args: StackTraceRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct StepBackRequestArguments {
     /// Execute 'stepBack' for this thread.
     #[serde(rename = "threadId")]
@@ -871,10 +1365,25 @@ pub struct StepBackRequestArguments {
 
     /// Optional granularity to step. If no granularity is specified, a granularity of 'statement' is assumed.
     #[serde(rename = "granularity", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub granularity: SteppingGranularity,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<StepBackRequestArguments> for Request {
+    fn from(args: StepBackRequestArguments) -> Self {
+        Self::StepBack(args)
+    }
+}
+impl From<StepBackRequestArguments> for ProtocolMessageContent {
+    fn from(args: StepBackRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct StepInRequestArguments {
     /// Execute 'stepIn' for this thread.
     #[serde(rename = "threadId")]
@@ -882,21 +1391,51 @@ pub struct StepInRequestArguments {
 
     /// Optional id of the target to step into.
     #[serde(rename = "targetId", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub target_id: Option<i32>,
 
     /// Optional granularity to step. If no granularity is specified, a granularity of 'statement' is assumed.
     #[serde(rename = "granularity", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub granularity: SteppingGranularity,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<StepInRequestArguments> for Request {
+    fn from(args: StepInRequestArguments) -> Self {
+        Self::StepIn(args)
+    }
+}
+impl From<StepInRequestArguments> for ProtocolMessageContent {
+    fn from(args: StepInRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct StepInTargetsRequestArguments {
     /// The stack frame for which to retrieve the possible stepIn targets.
     #[serde(rename = "frameId")]
     pub frame_id: i32,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<StepInTargetsRequestArguments> for Request {
+    fn from(args: StepInTargetsRequestArguments) -> Self {
+        Self::StepInTargets(args)
+    }
+}
+impl From<StepInTargetsRequestArguments> for ProtocolMessageContent {
+    fn from(args: StepInTargetsRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct StepOutRequestArguments {
     /// Execute 'stepOut' for this thread.
     #[serde(rename = "threadId")]
@@ -904,24 +1443,69 @@ pub struct StepOutRequestArguments {
 
     /// Optional granularity to step. If no granularity is specified, a granularity of 'statement' is assumed.
     #[serde(rename = "granularity", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub granularity: SteppingGranularity,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<StepOutRequestArguments> for Request {
+    fn from(args: StepOutRequestArguments) -> Self {
+        Self::StepOut(args)
+    }
+}
+impl From<StepOutRequestArguments> for ProtocolMessageContent {
+    fn from(args: StepOutRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct TerminateRequestArguments {
     /// A value of true indicates that this 'terminate' request is part of a restart sequence.
     #[serde(rename = "restart", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub restart: bool,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<TerminateRequestArguments> for Request {
+    fn from(args: TerminateRequestArguments) -> Self {
+        Self::Terminate(args)
+    }
+}
+impl From<TerminateRequestArguments> for ProtocolMessageContent {
+    fn from(args: TerminateRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct TerminateThreadsRequestArguments {
     /// Ids of threads to be terminated.
     #[serde(rename = "threadIds", default, skip_serializing_if = "Vec::is_empty")]
+    #[builder(default)]
     pub thread_ids: Vec<i32>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<TerminateThreadsRequestArguments> for Request {
+    fn from(args: TerminateThreadsRequestArguments) -> Self {
+        Self::TerminateThreads(args)
+    }
+}
+impl From<TerminateThreadsRequestArguments> for ProtocolMessageContent {
+    fn from(args: TerminateThreadsRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct VariablesRequestArguments {
     /// The Variable reference.
     #[serde(rename = "variablesReference")]
@@ -929,21 +1513,39 @@ pub struct VariablesRequestArguments {
 
     /// Optional filter to limit the child variables to either named or indexed. If omitted, both types are fetched.
     #[serde(rename = "filter", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub filter: Option<VariablesFilter>,
 
     /// The index of the first variable to return; if omitted children start at 0.
     #[serde(rename = "start", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub start: i32,
 
     /// The number of variables to return. If count is missing or 0, all variables are returned.
     #[serde(rename = "count", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub count: i32,
 
     /// Specifies details on how to format the Variable values.
     ///
     /// The attribute is only honored by a debug adapter if the capability 'supportsValueFormattingOptions' is true.
     #[serde(rename = "format", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub format: Option<ValueFormat>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<VariablesRequestArguments> for Request {
+    fn from(args: VariablesRequestArguments) -> Self {
+        Self::Variables(args)
+    }
+}
+impl From<VariablesRequestArguments> for ProtocolMessageContent {
+    fn from(args: VariablesRequestArguments) -> Self {
+        Self::from(Request::from(args))
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
