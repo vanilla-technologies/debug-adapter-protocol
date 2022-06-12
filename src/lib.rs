@@ -19,9 +19,17 @@ pub struct ProtocolMessage {
     /// Sequence number (also known as message ID). For protocol messages of type 'request' this ID can be used to cancel the request.
     pub seq: SequenceNumber,
 
-    /// Message type.
     #[serde(flatten)]
-    pub type_: ProtocolMessageType,
+    pub content: ProtocolMessageContent,
+}
+
+impl ProtocolMessage {
+    pub fn new(seq: SequenceNumber, content: impl Into<ProtocolMessageContent>) -> ProtocolMessage {
+        ProtocolMessage {
+            seq,
+            content: content.into(),
+        }
+    }
 }
 
 impl Display for ProtocolMessage {
@@ -31,10 +39,9 @@ impl Display for ProtocolMessage {
     }
 }
 
-/// Message type.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
-pub enum ProtocolMessageType {
+pub enum ProtocolMessageContent {
     /// A client or debug adapter initiated request.
     Request(Request),
 
@@ -47,9 +54,11 @@ pub enum ProtocolMessageType {
 
 #[cfg(test)]
 mod tests {
+    use serde_json::{Map, Number, Value};
+
     use super::*;
     use crate::{events::*, requests::*, responses::*, types::*};
-    use std::collections::HashMap;
+    use std::{collections::HashMap, iter::FromIterator};
 
     #[test]
     fn test_deserialize_request_initialize() {
@@ -82,23 +91,22 @@ mod tests {
             actual,
             ProtocolMessage {
                 seq: 1,
-                type_: ProtocolMessageType::Request(Request::Initialize(
-                    InitializeRequestArguments {
-                        client_id: Some("vscode".to_string()),
-                        client_name: Some("Visual Studio Code".to_string()),
-                        adapter_id: "mock".to_string(),
-                        locale: Some("de".to_string()),
-                        lines_start_at_1: true,
-                        columns_start_at_1: true,
-                        path_format: PathFormat::Path,
-                        supports_variable_type: true,
-                        supports_variable_paging: true,
-                        supports_run_in_terminal_request: true,
-                        supports_memory_references: false,
-                        supports_progress_reporting: true,
-                        supports_invalidated_event: true,
-                    }
-                ),),
+                content: InitializeRequestArguments::builder()
+                    .client_id(Some("vscode".to_string()))
+                    .client_name(Some("Visual Studio Code".to_string()))
+                    .adapter_id("mock".to_string())
+                    .locale(Some("de".to_string()))
+                    .lines_start_at_1(true)
+                    .columns_start_at_1(true)
+                    .path_format(PathFormat::Path)
+                    .supports_variable_type(true)
+                    .supports_variable_paging(true)
+                    .supports_run_in_terminal_request(true)
+                    .supports_memory_references(false)
+                    .supports_progress_reporting(true)
+                    .supports_invalidated_event(true)
+                    .build()
+                    .into()
             }
         );
     }
@@ -108,21 +116,23 @@ mod tests {
         // given:
         let under_test = ProtocolMessage {
             seq: 1,
-            type_: ProtocolMessageType::Request(Request::Initialize(InitializeRequestArguments {
-                client_id: Some("vscode".to_string()),
-                client_name: Some("Visual Studio Code".to_string()),
-                adapter_id: "mock".to_string(),
-                locale: Some("de".to_string()),
-                lines_start_at_1: true,
-                columns_start_at_1: true,
-                path_format: PathFormat::Path,
-                supports_variable_type: true,
-                supports_variable_paging: true,
-                supports_run_in_terminal_request: true,
-                supports_memory_references: false,
-                supports_progress_reporting: true,
-                supports_invalidated_event: true,
-            })),
+            content: ProtocolMessageContent::Request(Request::Initialize(
+                InitializeRequestArguments::builder()
+                    .client_id(Some("vscode".to_string()))
+                    .client_name(Some("Visual Studio Code".to_string()))
+                    .adapter_id("mock".to_string())
+                    .locale(Some("de".to_string()))
+                    .lines_start_at_1(true)
+                    .columns_start_at_1(true)
+                    .path_format(PathFormat::Path)
+                    .supports_variable_type(true)
+                    .supports_variable_paging(true)
+                    .supports_run_in_terminal_request(true)
+                    .supports_memory_references(false)
+                    .supports_progress_reporting(true)
+                    .supports_invalidated_event(true)
+                    .build(),
+            )),
         };
 
         // when:
@@ -179,17 +189,18 @@ mod tests {
             actual,
             ProtocolMessage {
                 seq: 1,
-                type_: ProtocolMessageType::Response(Response {
+                content: ProtocolMessageContent::Response(Response {
                     request_seq: 1,
-                    result: Ok(SuccessResponse::Initialize(Capabilities {
-                        supports_configuration_done_request: true,
-                        supports_function_breakpoints: true,
-                        supports_conditional_breakpoints: true,
-                        supports_hit_conditional_breakpoints: true,
-                        supports_data_breakpoints: true,
-                        supports_instruction_breakpoints: true,
-                        ..Default::default()
-                    })),
+                    result: Ok(SuccessResponse::Initialize(
+                        Capabilities::builder()
+                            .supports_configuration_done_request(true)
+                            .supports_function_breakpoints(true)
+                            .supports_conditional_breakpoints(true)
+                            .supports_hit_conditional_breakpoints(true)
+                            .supports_data_breakpoints(true)
+                            .supports_instruction_breakpoints(true)
+                            .build()
+                    ))
                 })
             }
         )
@@ -200,17 +211,18 @@ mod tests {
         // given:
         let under_test = ProtocolMessage {
             seq: 1,
-            type_: ProtocolMessageType::Response(Response {
+            content: ProtocolMessageContent::Response(Response {
                 request_seq: 1,
-                result: Ok(SuccessResponse::Initialize(Capabilities {
-                    supports_configuration_done_request: true,
-                    supports_function_breakpoints: true,
-                    supports_conditional_breakpoints: true,
-                    supports_hit_conditional_breakpoints: true,
-                    supports_data_breakpoints: true,
-                    supports_instruction_breakpoints: true,
-                    ..Default::default()
-                })),
+                result: Ok(SuccessResponse::Initialize(
+                    Capabilities::builder()
+                        .supports_configuration_done_request(true)
+                        .supports_function_breakpoints(true)
+                        .supports_conditional_breakpoints(true)
+                        .supports_hit_conditional_breakpoints(true)
+                        .supports_data_breakpoints(true)
+                        .supports_instruction_breakpoints(true)
+                        .build(),
+                )),
             }),
         };
 
@@ -264,23 +276,23 @@ mod tests {
             actual,
             ProtocolMessage {
                 seq: 1,
-                type_: ProtocolMessageType::Response(Response {
+                content: ProtocolMessageContent::Response(Response {
                     request_seq: 2,
-                    result: Err(ErrorResponse {
-                        command: "initialize".to_string(),
-                        message: "Something went wrong".to_string(),
-                        body: ErrorResponseBody {
-                            error: Some(Message {
-                                id: 3,
-                                format: "This thing went wrong".to_string(),
-                                variables: HashMap::new(),
-                                send_telemetry: false,
-                                show_user: false,
-                                url: None,
-                                url_label: None
-                            })
-                        }
-                    }),
+                    result: Err(ErrorResponse::builder()
+                        .command("initialize".to_string())
+                        .message("Something went wrong".to_string())
+                        .body(ErrorResponseBody::new(Some(
+                            Message::builder()
+                                .id(3)
+                                .format("This thing went wrong".to_string())
+                                .variables(HashMap::new())
+                                .send_telemetry(false)
+                                .show_user(false)
+                                .url(None)
+                                .url_label(None)
+                                .build()
+                        )))
+                        .build())
                 })
             }
         )
@@ -291,23 +303,23 @@ mod tests {
         // given:
         let under_test = ProtocolMessage {
             seq: 1,
-            type_: ProtocolMessageType::Response(Response {
+            content: ProtocolMessageContent::Response(Response {
                 request_seq: 2,
-                result: Err(ErrorResponse {
-                    command: "initialize".to_string(),
-                    message: "Something went wrong".to_string(),
-                    body: ErrorResponseBody {
-                        error: Some(Message {
-                            id: 3,
-                            format: "This thing went wrong".to_string(),
-                            variables: HashMap::new(),
-                            send_telemetry: false,
-                            show_user: false,
-                            url: None,
-                            url_label: None,
-                        }),
-                    },
-                }),
+                result: Err(ErrorResponse::builder()
+                    .command("initialize".to_string())
+                    .message("Something went wrong".to_string())
+                    .body(ErrorResponseBody::new(Some(
+                        Message::builder()
+                            .id(3)
+                            .format("This thing went wrong".to_string())
+                            .variables(HashMap::new())
+                            .send_telemetry(false)
+                            .show_user(false)
+                            .url(None)
+                            .url_label(None)
+                            .build(),
+                    )))
+                    .build()),
             }),
         };
 
@@ -354,7 +366,7 @@ mod tests {
             actual,
             ProtocolMessage {
                 seq: 1,
-                type_: ProtocolMessageType::Event(Event::Exited(ExitedEventBody { exit_code: 0 }))
+                content: ExitedEventBody::builder().exit_code(0).build().into()
             }
         )
     }
@@ -364,7 +376,7 @@ mod tests {
         // given:
         let under_test = ProtocolMessage {
             seq: 1,
-            type_: ProtocolMessageType::Event(Event::Exited(ExitedEventBody { exit_code: 0 })),
+            content: ExitedEventBody::builder().exit_code(0).build().into(),
         };
 
         // when:
@@ -382,5 +394,147 @@ mod tests {
   }
 }"#
         )
+    }
+
+    #[test]
+    fn test_deserialize_request_launch_with_additional_attributes() {
+        // given:
+        let json = r#"{
+            "command": "launch",
+            "arguments": {
+                "noDebug": true,
+                "__restart": "Some Value",
+                "bli": { "foo": "bar" },
+                "bla": 1,
+                "blub": true
+            },
+            "type": "request",
+            "seq": 1
+        }"#;
+
+        // when:
+        let actual = serde_json::from_str::<ProtocolMessage>(&json).unwrap();
+
+        // then:
+        assert_eq!(
+            actual,
+            ProtocolMessage {
+                seq: 1,
+                content: ProtocolMessageContent::Request(Request::Launch(
+                    LaunchRequestArguments::builder()
+                        .no_debug(true)
+                        .restart(Some(Value::String("Some Value".to_string())))
+                        .additional_attributes(Map::from_iter([
+                            (
+                                "bli".to_string(),
+                                Value::Object(Map::from_iter([(
+                                    "foo".to_string(),
+                                    Value::String("bar".to_string())
+                                )]))
+                            ),
+                            ("bla".to_string(), Value::Number(Number::from(1))),
+                            ("blub".to_string(), Value::Bool(true))
+                        ]))
+                        .build()
+                ))
+            }
+        );
+    }
+
+    #[test]
+    fn test_serialize_request_launch_with_additional_attributes() {
+        // given:
+        let under_test = ProtocolMessage {
+            seq: 1,
+            content: ProtocolMessageContent::Request(Request::Launch(
+                LaunchRequestArguments::builder()
+                    .no_debug(true)
+                    .restart(Some(Value::String("Some Value".to_string())))
+                    .additional_attributes(Map::from_iter([
+                        (
+                            "bli".to_string(),
+                            Value::Object(Map::from_iter([(
+                                "foo".to_string(),
+                                Value::String("bar".to_string()),
+                            )])),
+                        ),
+                        ("bla".to_string(), Value::Number(Number::from(1))),
+                        ("blub".to_string(), Value::Bool(true)),
+                    ]))
+                    .build(),
+            )),
+        };
+
+        // when:
+        let actual = serde_json::to_string_pretty(&under_test).unwrap();
+
+        // then:
+        assert_eq!(
+            actual,
+            r#"{
+  "seq": 1,
+  "type": "request",
+  "command": "launch",
+  "arguments": {
+    "noDebug": true,
+    "__restart": "Some Value",
+    "bli": {
+      "foo": "bar"
+    },
+    "bla": 1,
+    "blub": true
+  }
+}"#
+        );
+    }
+
+    #[test]
+    fn test_deserialize_request_launch_without_additional_attributes() {
+        // given:
+        let json = r#"{
+            "seq": 1,
+            "type": "request",
+            "command": "launch",
+            "arguments": {}
+        }"#;
+
+        // when:
+        let actual = serde_json::from_str::<ProtocolMessage>(&json).unwrap();
+
+        // then:
+        assert_eq!(
+            actual,
+            ProtocolMessage {
+                seq: 1,
+                content: ProtocolMessageContent::Request(Request::Launch(
+                    LaunchRequestArguments::builder().build()
+                ))
+            }
+        );
+    }
+
+    #[test]
+    fn test_serialize_request_launch_without_additional_attributes() {
+        // given:
+        let under_test = ProtocolMessage {
+            seq: 1,
+            content: ProtocolMessageContent::Request(Request::Launch(
+                LaunchRequestArguments::builder().build(),
+            )),
+        };
+
+        // when:
+        let actual = serde_json::to_string_pretty(&under_test).unwrap();
+
+        // then:
+        assert_eq!(
+            actual,
+            r#"{
+  "seq": 1,
+  "type": "request",
+  "command": "launch",
+  "arguments": {}
+}"#
+        );
     }
 }

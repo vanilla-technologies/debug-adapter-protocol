@@ -12,6 +12,7 @@ use serde::{
     Deserialize, Deserializer, Serialize, Serializer,
 };
 use serde_json::{Number, Value};
+use typed_builder::TypedBuilder;
 
 /// Response for a request.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -27,7 +28,7 @@ pub struct Response {
     pub result: Result<SuccessResponse, ErrorResponse>,
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ErrorResponse {
     /// The command requested.
     pub command: String,
@@ -42,12 +43,24 @@ pub struct ErrorResponse {
     pub message: String,
 
     pub body: ErrorResponseBody,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ErrorResponseBody {
     /// An optional, structured error message.
     pub error: Option<Message>,
+
+    #[serde(skip)]
+    private: (),
+}
+impl ErrorResponseBody {
+    pub fn new(error: Option<Message>) -> Self {
+        Self { error, private: () }
+    }
 }
 
 /// Contains request result if success is true and optional error details if success is false.
@@ -201,33 +214,62 @@ pub enum SuccessResponse {
     Variables(VariablesResponseBody),
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct BreakpointLocationsResponseBody {
     /// Sorted set of possible breakpoint locations.
     #[serde(rename = "breakpoints")]
     pub breakpoints: Vec<BreakpointLocation>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<BreakpointLocationsResponseBody> for SuccessResponse {
+    fn from(args: BreakpointLocationsResponseBody) -> Self {
+        Self::BreakpointLocations(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct CompletionsResponseBody {
     /// The possible completions for .
     #[serde(rename = "targets")]
     pub targets: Vec<CompletionItem>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<CompletionsResponseBody> for SuccessResponse {
+    fn from(args: CompletionsResponseBody) -> Self {
+        Self::Completions(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ContinueResponseBody {
     /// If true, the 'continue' request has ignored the specified thread and continued all threads instead.
     ///
     /// If this attribute is missing a value of 'true' is assumed for backward compatibility.
     #[serde(rename = "allThreadsContinued", default = "true_")]
+    #[builder(default)]
     pub all_threads_continued: bool,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ContinueResponseBody> for SuccessResponse {
+    fn from(args: ContinueResponseBody) -> Self {
+        Self::Continue(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct DataBreakpointInfoResponseBody {
     /// An identifier for the data on which a data breakpoint can be registered with the setDataBreakpoints request or null if no data breakpoint is available.
     #[serde(rename = "dataId")]
+    #[builder(default)]
     pub data_id: Option<String>,
 
     /// UI string that describes on what data the breakpoint is set on or why a data breakpoint is not available.
@@ -236,21 +278,41 @@ pub struct DataBreakpointInfoResponseBody {
 
     /// Optional attribute listing the available access types for a potential data breakpoint. A UI frontend could surface this information.
     #[serde(rename = "accessTypes", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub access_types: Option<Vec<DataBreakpointAccessType>>,
 
     /// Optional attribute indicating that a potential data breakpoint could be persisted across sessions.
     #[serde(rename = "canPersist", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub can_persist: bool,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<DataBreakpointInfoResponseBody> for SuccessResponse {
+    fn from(args: DataBreakpointInfoResponseBody) -> Self {
+        Self::DataBreakpointInfo(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct DisassembleResponseBody {
     /// The list of disassembled instructions.
     #[serde(rename = "instructions")]
     pub instructions: Vec<DisassembledInstruction>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<DisassembleResponseBody> for SuccessResponse {
+    fn from(args: DisassembleResponseBody) -> Self {
+        Self::Disassemble(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct EvaluateResponseBody {
     /// The result of the evaluate request.
     #[serde(rename = "result")]
@@ -260,10 +322,12 @@ pub struct EvaluateResponseBody {
     ///
     /// This attribute should only be returned by a debug adapter if the client has passed the value true for the 'supportsVariableType' capability of the 'initialize' request.
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub type_: Option<String>,
 
     /// Properties of a evaluate result that can be used to determine how to render the result in the UI.
     #[serde(rename = "presentationHint", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub presentation_hint: Option<VariablePresentationHint>,
 
     /// If variablesReference is > 0, the evaluate result is structured and its children can be retrieved by passing variablesReference to the VariablesRequest.
@@ -278,6 +342,7 @@ pub struct EvaluateResponseBody {
     ///
     /// The value should be less than or equal to 2147483647 (2^31-1).
     #[serde(rename = "namedVariables", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub named_variables: Option<i32>,
 
     /// The number of indexed child variables.
@@ -286,6 +351,7 @@ pub struct EvaluateResponseBody {
     ///
     /// The value should be less than or equal to 2147483647 (2^31-1).
     #[serde(rename = "indexedVariables", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub indexed_variables: Option<i32>,
 
     /// Optional memory reference to a location appropriate for this result.
@@ -294,10 +360,20 @@ pub struct EvaluateResponseBody {
     ///
     /// This attribute should be returned by a debug adapter if the client has passed the value true for the 'supportsMemoryReferences' capability of the 'initialize' request.
     #[serde(rename = "memoryReference", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub memory_reference: Option<String>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<EvaluateResponseBody> for SuccessResponse {
+    fn from(args: EvaluateResponseBody) -> Self {
+        Self::Evaluate(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ExceptionInfoResponseBody {
     /// ID of the exception that was thrown.
     #[serde(rename = "exceptionId")]
@@ -305,6 +381,7 @@ pub struct ExceptionInfoResponseBody {
 
     /// Descriptive text for the exception provided by the debug adapter.
     #[serde(rename = "description", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub description: Option<String>,
 
     /// Mode that caused the exception notification to be raised.
@@ -313,24 +390,52 @@ pub struct ExceptionInfoResponseBody {
 
     /// Detailed information about the exception.
     #[serde(rename = "details", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub details: Option<ExceptionDetails>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ExceptionInfoResponseBody> for SuccessResponse {
+    fn from(args: ExceptionInfoResponseBody) -> Self {
+        Self::ExceptionInfo(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct GotoTargetsResponseBody {
     /// The possible goto targets of the specified location.
     #[serde(rename = "targets")]
     pub targets: Vec<GotoTarget>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<GotoTargetsResponseBody> for SuccessResponse {
+    fn from(args: GotoTargetsResponseBody) -> Self {
+        Self::GotoTargets(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct LoadedSourcesResponseBody {
     /// Set of loaded sources.
     #[serde(rename = "sources")]
     pub sources: Vec<Source>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<LoadedSourcesResponseBody> for SuccessResponse {
+    fn from(args: LoadedSourcesResponseBody) -> Self {
+        Self::LoadedSources(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ModulesResponseBody {
     /// All modules or range of modules.
     #[serde(rename = "modules")]
@@ -338,10 +443,20 @@ pub struct ModulesResponseBody {
 
     /// The total number of modules available.
     #[serde(rename = "totalModules", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub total_modules: Option<i32>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ModulesResponseBody> for SuccessResponse {
+    fn from(args: ModulesResponseBody) -> Self {
+        Self::Modules(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ReadMemoryResponseBody {
     /// The address of the first byte of data returned.
     ///
@@ -353,57 +468,116 @@ pub struct ReadMemoryResponseBody {
     ///
     /// This can be used to determine the number of bytes that must be skipped before a subsequent 'readMemory' request will succeed.
     #[serde(rename = "unreadableBytes", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub unreadable_bytes: Option<i32>,
 
     /// The bytes read from memory, encoded using base64.
     #[serde(rename = "data", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub data: Option<String>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ReadMemoryResponseBody> for SuccessResponse {
+    fn from(args: ReadMemoryResponseBody) -> Self {
+        Self::ReadMemory(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct RunInTerminalResponseBody {
     /// The process ID. The value should be less than or equal to 2147483647 (2^31-1).
     #[serde(rename = "processId", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub process_id: Option<i32>,
 
     /// The process ID of the terminal shell. The value should be less than or equal to 2147483647 (2^31-1).
     #[serde(rename = "shellProcessId", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub shell_process_id: Option<i32>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<RunInTerminalResponseBody> for SuccessResponse {
+    fn from(args: RunInTerminalResponseBody) -> Self {
+        Self::RunInTerminal(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ScopesResponseBody {
     /// The scopes of the stackframe. If the array has length zero, there are no scopes available.
     #[serde(rename = "scopes")]
     pub scopes: Vec<Scope>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ScopesResponseBody> for SuccessResponse {
+    fn from(args: ScopesResponseBody) -> Self {
+        Self::Scopes(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SetBreakpointsResponseBody {
     /// Information about the breakpoints.
     ///
     /// The array elements are in the same order as the elements of the 'breakpoints' (or the deprecated 'lines') array in the arguments.
     #[serde(rename = "breakpoints")]
     pub breakpoints: Vec<Breakpoint>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SetBreakpointsResponseBody> for SuccessResponse {
+    fn from(args: SetBreakpointsResponseBody) -> Self {
+        Self::SetBreakpoints(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SetDataBreakpointsResponseBody {
     /// Information about the data breakpoints. The array elements correspond to the elements of the input argument 'breakpoints' array.
     #[serde(rename = "breakpoints")]
     pub breakpoints: Vec<Breakpoint>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SetDataBreakpointsResponseBody> for SuccessResponse {
+    fn from(args: SetDataBreakpointsResponseBody) -> Self {
+        Self::SetDataBreakpoints(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SetExceptionBreakpointsResponseBody {
     /// Information about the exception breakpoints or filters.
     ///
     /// The breakpoints returned are in the same order as the elements of the 'filters', 'filterOptions', 'exceptionOptions' arrays in the arguments. If both 'filters' and 'filterOptions' are given, the returned array must start with 'filters' information first, followed by 'filterOptions' information.
     #[serde(rename = "breakpoints", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub breakpoints: Option<Vec<Breakpoint>>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SetExceptionBreakpointsResponseBody> for SuccessResponse {
+    fn from(args: SetExceptionBreakpointsResponseBody) -> Self {
+        Self::SetExceptionBreakpoints(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SetExpressionResponseBody {
     /// The new value of the expression.
     #[serde(rename = "value")]
@@ -413,16 +587,19 @@ pub struct SetExpressionResponseBody {
     ///
     /// This attribute should only be returned by a debug adapter if the client has passed the value true for the 'supportsVariableType' capability of the 'initialize' request.
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub type_: Option<String>,
 
     /// Properties of a value that can be used to determine how to render the result in the UI.
     #[serde(rename = "presentationHint", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub presentation_hint: Option<VariablePresentationHint>,
 
     /// If variablesReference is > 0, the value is structured and its children can be retrieved by passing variablesReference to the VariablesRequest.
     ///
     /// The value should be less than or equal to 2147483647 (2^31-1).
     #[serde(rename = "variablesReference", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub variables_reference: Option<i32>,
 
     /// The number of named child variables.
@@ -431,6 +608,7 @@ pub struct SetExpressionResponseBody {
     ///
     /// The value should be less than or equal to 2147483647 (2^31-1).
     #[serde(rename = "namedVariables", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub named_variables: Option<i32>,
 
     /// The number of indexed child variables.
@@ -439,24 +617,52 @@ pub struct SetExpressionResponseBody {
     ///
     /// The value should be less than or equal to 2147483647 (2^31-1).
     #[serde(rename = "indexedVariables", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub indexed_variables: Option<i32>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SetExpressionResponseBody> for SuccessResponse {
+    fn from(args: SetExpressionResponseBody) -> Self {
+        Self::SetExpression(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SetFunctionBreakpointsResponseBody {
     /// Information about the breakpoints. The array elements correspond to the elements of the 'breakpoints' array.
     #[serde(rename = "breakpoints")]
     pub breakpoints: Vec<Breakpoint>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SetFunctionBreakpointsResponseBody> for SuccessResponse {
+    fn from(args: SetFunctionBreakpointsResponseBody) -> Self {
+        Self::SetFunctionBreakpoints(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SetInstructionBreakpointsResponseBody {
     /// Information about the breakpoints. The array elements correspond to the elements of the 'breakpoints' array.
     #[serde(rename = "breakpoints")]
     pub breakpoints: Vec<Breakpoint>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SetInstructionBreakpointsResponseBody> for SuccessResponse {
+    fn from(args: SetInstructionBreakpointsResponseBody) -> Self {
+        Self::SetInstructionBreakpoints(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SetVariableResponseBody {
     /// The new value of the variable.
     #[serde(rename = "value")]
@@ -464,12 +670,14 @@ pub struct SetVariableResponseBody {
 
     /// The type of the new value. Typically shown in the UI when hovering over the value.
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub type_: Option<String>,
 
     /// If variablesReference is > 0, the new value is structured and its children can be retrieved by passing variablesReference to the VariablesRequest.
     ///
     /// The value should be less than or equal to 2147483647 (2^31-1).
     #[serde(rename = "variablesReference", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub variables_reference: Option<i32>,
 
     /// The number of named child variables.
@@ -478,6 +686,7 @@ pub struct SetVariableResponseBody {
     ///
     /// The value should be less than or equal to 2147483647 (2^31-1).
     #[serde(rename = "namedVariables", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub named_variables: Option<i32>,
 
     /// The number of indexed child variables.
@@ -486,10 +695,20 @@ pub struct SetVariableResponseBody {
     ///
     /// The value should be less than or equal to 2147483647 (2^31-1).
     #[serde(rename = "indexedVariables", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub indexed_variables: Option<i32>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SetVariableResponseBody> for SuccessResponse {
+    fn from(args: SetVariableResponseBody) -> Self {
+        Self::SetVariable(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct SourceResponseBody {
     /// Content of the source reference.
     #[serde(rename = "content")]
@@ -497,10 +716,20 @@ pub struct SourceResponseBody {
 
     /// Optional content type (mime type) of the source.
     #[serde(rename = "mimeType", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub mime_type: Option<String>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<SourceResponseBody> for SuccessResponse {
+    fn from(args: SourceResponseBody) -> Self {
+        Self::Source(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct StackTraceResponseBody {
     /// The frames of the stackframe. If the array has length zero, there are no stackframes available.
     ///
@@ -510,28 +739,65 @@ pub struct StackTraceResponseBody {
 
     /// The total number of frames available in the stack. If omitted or if totalFrames is larger than the available frames, a client is expected to request frames until a request returns less frames than requested (which indicates the end of the stack). Returning monotonically increasing totalFrames values for subsequent requests can be used to enforce paging in the client.
     #[serde(rename = "totalFrames", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub total_frames: Option<i32>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<StackTraceResponseBody> for SuccessResponse {
+    fn from(args: StackTraceResponseBody) -> Self {
+        Self::StackTrace(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct StepInTargetsResponseBody {
     /// The possible stepIn targets of the specified source location.
     #[serde(rename = "targets")]
     pub targets: Vec<StepInTarget>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<StepInTargetsResponseBody> for SuccessResponse {
+    fn from(args: StepInTargetsResponseBody) -> Self {
+        Self::StepInTargets(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ThreadsResponseBody {
     /// All threads.
     #[serde(rename = "threads")]
     pub threads: Vec<Thread>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ThreadsResponseBody> for SuccessResponse {
+    fn from(args: ThreadsResponseBody) -> Self {
+        Self::Threads(args)
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct VariablesResponseBody {
     /// All (or a range) of variables for the given variable reference.
     #[serde(rename = "variables")]
     pub variables: Vec<Variable>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<VariablesResponseBody> for SuccessResponse {
+    fn from(args: VariablesResponseBody) -> Self {
+        Self::Variables(args)
+    }
 }
 
 // Workaround from https://stackoverflow.com/a/65576570

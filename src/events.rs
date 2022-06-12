@@ -1,9 +1,11 @@
 use crate::{
     types::{Breakpoint, Capabilities, InvalidatedAreas, Module, Source},
     utils::eq_default,
+    ProtocolMessageContent,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use typed_builder::TypedBuilder;
 
 /// A debug adapter initiated event.
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -101,8 +103,13 @@ pub enum Event {
     /// The event indicates that a thread has started or exited.
     Thread(ThreadEventBody),
 }
+impl From<Event> for ProtocolMessageContent {
+    fn from(event: Event) -> Self {
+        Self::Event(event)
+    }
+}
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct BreakpointEventBody {
     /// The reason for the event.
     #[serde(rename = "reason")]
@@ -111,6 +118,20 @@ pub struct BreakpointEventBody {
     /// The 'id' attribute is used to find the target breakpoint and the other attributes are used as the new values.
     #[serde(rename = "breakpoint")]
     pub breakpoint: Breakpoint,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<BreakpointEventBody> for Event {
+    fn from(body: BreakpointEventBody) -> Self {
+        Self::Breakpoint(body)
+    }
+}
+impl From<BreakpointEventBody> for ProtocolMessageContent {
+    fn from(body: BreakpointEventBody) -> Self {
+        Self::from(Event::from(body))
+    }
 }
 
 /// The reason for the event.
@@ -126,14 +147,28 @@ pub enum BreakpointEventReason {
     Removed,
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct CapabilitiesEventBody {
     /// The set of updated capabilities.
     #[serde(rename = "capabilities")]
     pub capabilities: Capabilities,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<CapabilitiesEventBody> for Event {
+    fn from(body: CapabilitiesEventBody) -> Self {
+        Self::Capabilities(body)
+    }
+}
+impl From<CapabilitiesEventBody> for ProtocolMessageContent {
+    fn from(body: CapabilitiesEventBody) -> Self {
+        Self::from(Event::from(body))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ContinuedEventBody {
     /// The thread which was continued.
     #[serde(rename = "threadId")]
@@ -145,32 +180,78 @@ pub struct ContinuedEventBody {
         default,
         skip_serializing_if = "eq_default"
     )]
+    #[builder(default)]
     pub all_threads_continued: bool,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ContinuedEventBody> for Event {
+    fn from(body: ContinuedEventBody) -> Self {
+        Self::Continued(body)
+    }
+}
+impl From<ContinuedEventBody> for ProtocolMessageContent {
+    fn from(body: ContinuedEventBody) -> Self {
+        Self::from(Event::from(body))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ExitedEventBody {
     /// The exit code returned from the debuggee.
     #[serde(rename = "exitCode")]
     pub exit_code: i32,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ExitedEventBody> for Event {
+    fn from(body: ExitedEventBody) -> Self {
+        Self::Exited(body)
+    }
+}
+impl From<ExitedEventBody> for ProtocolMessageContent {
+    fn from(body: ExitedEventBody) -> Self {
+        Self::from(Event::from(body))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct InvalidatedEventBody {
     /// Optional set of logical areas that got invalidated. This property has a hint characteristic: a client can only be expected to make a 'best effort' in honouring the areas but there are no guarantees. If this property is missing, empty, or if values are not understand the client should assume a single value 'all'.
     #[serde(rename = "areas", default, skip_serializing_if = "Vec::is_empty")]
+    #[builder(default)]
     pub areas: Vec<InvalidatedAreas>,
 
     /// If specified, the client only needs to refetch data related to this thread.
     #[serde(rename = "threadId", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub thread_id: Option<i32>,
 
     /// If specified, the client only needs to refetch data related to this stack frame (and the 'threadId' is ignored).
     #[serde(rename = "stackFrameId", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub stack_frame_id: Option<i32>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<InvalidatedEventBody> for Event {
+    fn from(body: InvalidatedEventBody) -> Self {
+        Self::Invalidated(body)
+    }
+}
+impl From<InvalidatedEventBody> for ProtocolMessageContent {
+    fn from(body: InvalidatedEventBody) -> Self {
+        Self::from(Event::from(body))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct LoadedSourceEventBody {
     /// The reason for the event.
     #[serde(rename = "reason")]
@@ -179,6 +260,20 @@ pub struct LoadedSourceEventBody {
     /// The new, changed, or removed source.
     #[serde(rename = "source")]
     pub source: Source,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<LoadedSourceEventBody> for Event {
+    fn from(body: LoadedSourceEventBody) -> Self {
+        Self::LoadedSource(body)
+    }
+}
+impl From<LoadedSourceEventBody> for ProtocolMessageContent {
+    fn from(body: LoadedSourceEventBody) -> Self {
+        Self::from(Event::from(body))
+    }
 }
 
 /// The reason for the event.
@@ -194,7 +289,7 @@ pub enum LoadedSourceEventReason {
     Removed,
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ModuleEventBody {
     /// The reason for the event.
     #[serde(rename = "reason")]
@@ -203,6 +298,20 @@ pub struct ModuleEventBody {
     /// The new, changed, or removed module. In case of 'removed' only the module id is used.
     #[serde(rename = "module")]
     pub module: Module,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ModuleEventBody> for Event {
+    fn from(body: ModuleEventBody) -> Self {
+        Self::Module(body)
+    }
+}
+impl From<ModuleEventBody> for ProtocolMessageContent {
+    fn from(body: ModuleEventBody) -> Self {
+        Self::from(Event::from(body))
+    }
 }
 
 /// The reason for the event.
@@ -218,10 +327,11 @@ pub enum ModuleEventReason {
     Removed,
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct OutputEventBody {
     /// The output category. If not specified, 'console' is assumed.
     #[serde(rename = "category", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub category: OutputCategory,
 
     /// The output to report.
@@ -230,27 +340,47 @@ pub struct OutputEventBody {
 
     /// Support for keeping an output log organized by grouping related messages.
     #[serde(rename = "group", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub group: Option<OutputGroup>,
 
     /// If an attribute 'variablesReference' exists and its value is > 0, the output contains objects which can be retrieved by passing 'variablesReference' to the 'variables' request. The value should be less than or equal to 2147483647 (2^31-1).
     #[serde(rename = "variablesReference", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub variables_reference: Option<i32>,
 
     /// An optional source location where the output was produced.
     #[serde(rename = "source", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub source: Option<Source>,
 
     /// An optional source location line where the output was produced.
     #[serde(rename = "line", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub line: Option<i32>,
 
     /// An optional source location column where the output was produced.
     #[serde(rename = "column", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub column: Option<i32>,
 
     /// Optional data to report. For the 'telemetry' category the data will be sent to telemetry, for the other categories the data is shown in JSON format.
     #[serde(rename = "data", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub data: Option<Value>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<OutputEventBody> for Event {
+    fn from(body: OutputEventBody) -> Self {
+        Self::Output(body)
+    }
+}
+impl From<OutputEventBody> for ProtocolMessageContent {
+    fn from(body: OutputEventBody) -> Self {
+        Self::from(Event::from(body))
+    }
 }
 
 /// The output category. If not specified, 'console' is assumed.
@@ -305,7 +435,7 @@ pub enum OutputGroup {
     End,
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ProcessEventBody {
     /// The logical name of the process. This is usually the full path to process's executable file. Example: /home/example/myproj/program.js.
     #[serde(rename = "name")]
@@ -313,19 +443,37 @@ pub struct ProcessEventBody {
 
     /// The system process id of the debugged process. This property will be missing for non-system processes.
     #[serde(rename = "systemProcessId", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub system_process_id: Option<i32>,
 
     /// If true, the process is running on the same computer as the debug adapter.
     #[serde(rename = "isLocalProcess", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub is_local_process: Option<bool>,
 
     /// Describes how the debug engine started debugging this process.
     #[serde(rename = "startMethod", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub start_method: Option<ProcessStartMethod>,
 
     /// The size of a pointer or address for this process, in bits. This value may be used by clients when formatting addresses for display.
     #[serde(rename = "pointerSize", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub pointer_size: Option<i32>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ProcessEventBody> for Event {
+    fn from(body: ProcessEventBody) -> Self {
+        Self::Process(body)
+    }
+}
+impl From<ProcessEventBody> for ProtocolMessageContent {
+    fn from(body: ProcessEventBody) -> Self {
+        Self::from(Event::from(body))
+    }
 }
 
 /// Describes how the debug engine started debugging this process.
@@ -344,7 +492,7 @@ pub enum ProcessStartMethod {
     AttachForSuspendedLaunch,
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ProgressEndEventBody {
     /// The ID that was introduced in the initial 'ProgressStartEvent'.
     #[serde(rename = "progressId")]
@@ -352,10 +500,25 @@ pub struct ProgressEndEventBody {
 
     /// Optional, more detailed progress message. If omitted, the previous message (if any) is used.
     #[serde(rename = "message", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub message: Option<String>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ProgressEndEventBody> for Event {
+    fn from(body: ProgressEndEventBody) -> Self {
+        Self::ProgressEnd(body)
+    }
+}
+impl From<ProgressEndEventBody> for ProtocolMessageContent {
+    fn from(body: ProgressEndEventBody) -> Self {
+        Self::from(Event::from(body))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ProgressStartEventBody {
     /// An ID that must be used in subsequent 'progressUpdate' and 'progressEnd' events to make them refer to the same progress reporting.
     ///
@@ -373,6 +536,7 @@ pub struct ProgressStartEventBody {
     ///
     /// If the request ID is omitted, the progress report is assumed to be related to some general activity of the debug adapter.
     #[serde(rename = "requestId", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub request_id: Option<i32>,
 
     /// If true, the request that reports progress may be canceled with a 'cancel' request.
@@ -381,18 +545,35 @@ pub struct ProgressStartEventBody {
     ///
     /// Clients that don't support cancellation are allowed to ignore the setting.
     #[serde(rename = "cancellable", default, skip_serializing_if = "eq_default")]
+    #[builder(default)]
     pub cancellable: bool,
 
     /// Optional, more detailed progress message.
     #[serde(rename = "message", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub message: Option<String>,
 
     /// Optional progress percentage to display (value range: 0 to 100). If omitted no percentage will be shown.
     #[serde(rename = "percentage", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub percentage: Option<u8>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ProgressStartEventBody> for Event {
+    fn from(body: ProgressStartEventBody) -> Self {
+        Self::ProgressStart(body)
+    }
+}
+impl From<ProgressStartEventBody> for ProtocolMessageContent {
+    fn from(body: ProgressStartEventBody) -> Self {
+        Self::from(Event::from(body))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ProgressUpdateEventBody {
     /// The ID that was introduced in the initial 'progressStart' event.
     #[serde(rename = "progressId")]
@@ -400,14 +581,30 @@ pub struct ProgressUpdateEventBody {
 
     /// Optional, more detailed progress message. If omitted, the previous message (if any) is used.
     #[serde(rename = "message", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub message: Option<String>,
 
     /// Optional progress percentage to display (value range: 0 to 100). If omitted no percentage will be shown.
     #[serde(rename = "percentage", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub percentage: Option<u8>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ProgressUpdateEventBody> for Event {
+    fn from(body: ProgressUpdateEventBody) -> Self {
+        Self::ProgressUpdate(body)
+    }
+}
+impl From<ProgressUpdateEventBody> for ProtocolMessageContent {
+    fn from(body: ProgressUpdateEventBody) -> Self {
+        Self::from(Event::from(body))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct StoppedEventBody {
     /// The reason for the event.
     ///
@@ -417,10 +614,12 @@ pub struct StoppedEventBody {
 
     /// The full reason for the event, e.g. 'Paused on exception'. This string is shown in the UI as is and must be translated.
     #[serde(rename = "description", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub description: Option<String>,
 
     /// The thread which was stopped.
     #[serde(rename = "threadId", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub thread_id: Option<i32>,
 
     /// A value of true hints to the frontend that this event should not change the focus.
@@ -429,10 +628,12 @@ pub struct StoppedEventBody {
         default,
         skip_serializing_if = "eq_default"
     )]
+    #[builder(default)]
     pub preserve_focus_hint: bool,
 
     /// Additional information. E.g. if reason is 'exception', text contains the exception name. This string is shown in the UI.
     #[serde(rename = "text", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub text: Option<String>,
 
     /// If 'allThreadsStopped' is true, a debug adapter can announce that all threads have stopped.
@@ -445,6 +646,7 @@ pub struct StoppedEventBody {
         default,
         skip_serializing_if = "eq_default"
     )]
+    #[builder(default)]
     pub all_threads_stopped: bool,
 
     /// Ids of the breakpoints that triggered the event. In most cases there will be only a single breakpoint but here are some examples for multiple breakpoints:
@@ -459,7 +661,22 @@ pub struct StoppedEventBody {
         default,
         skip_serializing_if = "Vec::is_empty"
     )]
+    #[builder(default)]
     pub hit_breakpoint_ids: Vec<i32>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<StoppedEventBody> for Event {
+    fn from(body: StoppedEventBody) -> Self {
+        Self::Stopped(body)
+    }
+}
+impl From<StoppedEventBody> for ProtocolMessageContent {
+    fn from(body: StoppedEventBody) -> Self {
+        Self::from(Event::from(body))
+    }
 }
 
 /// The reason for the event.
@@ -495,16 +712,31 @@ pub enum StoppedEventReason {
     InstructionBreakpoint,
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct TerminatedEventBody {
     /// A debug adapter may set 'restart' to true (or to an arbitrary object) to request that the front end restarts the session.
     ///
     /// The value is not interpreted by the client and passed unmodified as an attribute '__restart' to the 'launch' and 'attach' requests.
     #[serde(rename = "restart", skip_serializing_if = "Option::is_none")]
+    #[builder(default)]
     pub restart: Option<Value>,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<TerminatedEventBody> for Event {
+    fn from(body: TerminatedEventBody) -> Self {
+        Self::Terminated(body)
+    }
+}
+impl From<TerminatedEventBody> for ProtocolMessageContent {
+    fn from(body: TerminatedEventBody) -> Self {
+        Self::from(Event::from(body))
+    }
 }
 
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
 pub struct ThreadEventBody {
     /// The reason for the event.
     #[serde(rename = "reason")]
@@ -513,6 +745,20 @@ pub struct ThreadEventBody {
     /// The identifier of the thread.
     #[serde(rename = "threadId")]
     pub thread_id: i32,
+
+    #[serde(skip)]
+    #[builder(default, setter(skip))]
+    private: (),
+}
+impl From<ThreadEventBody> for Event {
+    fn from(body: ThreadEventBody) -> Self {
+        Self::Thread(body)
+    }
+}
+impl From<ThreadEventBody> for ProtocolMessageContent {
+    fn from(body: ThreadEventBody) -> Self {
+        Self::from(Event::from(body))
+    }
 }
 
 /// The reason for the event.
