@@ -5,7 +5,7 @@ use crate::{
         Scope, Source, StackFrame, StepInTarget, Thread, Variable, VariablePresentationHint,
     },
     utils::{eq_default, true_},
-    SequenceNumber,
+    ProtocolMessageContent, SequenceNumber,
 };
 use serde::{
     de::{Error, Unexpected},
@@ -26,6 +26,11 @@ pub struct Response {
         serialize_with = "serialize_response_result"
     )]
     pub result: Result<SuccessResponse, ErrorResponse>,
+}
+impl From<Response> for ProtocolMessageContent {
+    fn from(response: Response) -> Self {
+        Self::Response(response)
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, TypedBuilder)]
