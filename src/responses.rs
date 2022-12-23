@@ -47,6 +47,7 @@ pub struct ErrorResponse {
     /// etc.
     pub message: String,
 
+    #[builder(default)]
     pub body: ErrorResponseBody,
 
     #[serde(skip)]
@@ -65,6 +66,11 @@ pub struct ErrorResponseBody {
 impl ErrorResponseBody {
     pub fn new(error: Option<Message>) -> Self {
         Self { error, private: () }
+    }
+}
+impl Default for ErrorResponseBody {
+    fn default() -> Self {
+        ErrorResponseBody::new(None)
     }
 }
 
