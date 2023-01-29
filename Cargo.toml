@@ -2,7 +2,7 @@
 authors = ["Adrodoc <adrodoc55@googlemail.com>"]
 categories = ["api-bindings", "development-tools::debugging"]
 description = "A Rust implementation of the Debug Adapter Protocol"
-edition = "2018"
+edition = "2021"
 keywords = ["dap", "protocol", "debug"]
 license = "MIT"
 name = "debug-adapter-protocol"
